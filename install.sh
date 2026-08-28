@@ -1,18 +1,21 @@
 #!/usr/bin/env bash
 # human-on-the-loop: hotl スキルをターゲットにインストールする
-#   ./install.sh --target <path> [--link]
+#   ./install.sh --target <path> [--link] [--force]
 #     --target  Claude Code プロジェクトのルート、または nanoclaw の groups/<group> ディレクトリ
 #     --link    コピーの代わりに symlink を張る（フレームワーク開発中の反映用）
+#     --force   既存インストールを確認なしで上書きする（更新・非対話実行用）
 set -euo pipefail
 
 SRC="$(cd "$(dirname "$0")" && pwd)/skills/hotl"
 TARGET=""
 LINK=false
+FORCE=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --target) TARGET="$2"; shift 2 ;;
     --link)   LINK=true; shift ;;
+    --force)  FORCE=true; shift ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
   esac
 done
@@ -39,9 +42,16 @@ else
 fi
 
 if [[ -e "$DEST" || -L "$DEST" ]]; then
-  read -r -p "既に存在します: $DEST — 上書きしますか？ [y/N] " ans
-  [[ "$ans" == "y" || "$ans" == "Y" ]] || { echo "中止しました。"; exit 0; }
-  rm -rf "$DEST"
+  if $FORCE; then
+    rm -rf "$DEST"
+  elif [[ -t 0 ]]; then
+    read -r -p "既に存在します: $DEST — 上書きしますか？ [y/N] " ans
+    [[ "$ans" == "y" || "$ans" == "Y" ]] || { echo "中止しました。"; exit 0; }
+    rm -rf "$DEST"
+  else
+    echo "Error: 既に存在します: $DEST — 非対話実行では --force を付けてください。" >&2
+    exit 1
+  fi
 fi
 
 mkdir -p "$(dirname "$DEST")"
