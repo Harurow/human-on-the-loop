@@ -13,7 +13,7 @@ FORCE=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --target) TARGET="$2"; shift 2 ;;
+    --target) TARGET="${2:-}"; [[ -n "$TARGET" ]] || { echo "Error: --target にはパスが必要です" >&2; exit 1; }; shift 2 ;;
     --link)   LINK=true; shift ;;
     --force)  FORCE=true; shift ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -21,7 +21,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$TARGET" ]]; then
-  echo "Usage: ./install.sh --target <path> [--link]" >&2
+  echo "Usage: ./install.sh --target <path> [--link] [--force]" >&2
   exit 1
 fi
 if [[ ! -d "$TARGET" ]]; then
