@@ -32,7 +32,7 @@ description: アプリ開発ワークフロー human-on-the-loop を実行・再
 
 承認済み要件を無効化する場面（要件変更・矛盾発見・イテレーション開始）では、必ず次の3点をセットで行う:
 
-1. state.json の `approval.approved` を false にし、旧承認記録（承認者・日時・ハッシュ）を log.md に退避する
+1. state.json の `approval` を初期状態に戻し（`approved: false`、`approved_by` / `approved_at` / `runtime` / `document_sha256` を null）、旧承認記録（承認者・日時・ハッシュ）を log.md に退避する
 2. `docs/requirements.md` の承認記録節を「未承認」に戻す（これに伴い requirements.md への書き込み禁止も解除される）
 3. Step 6 を実行して phase を戻す（要件変更・矛盾発見 → `requirements`、イテレーション → `hearing`）
 
@@ -52,8 +52,8 @@ description: アプリ開発ワークフロー human-on-the-loop を実行・再
 ## Step 3: ブートストラップ（state ファイルが無い場合のみ）
 
 1. プロジェクト直下に `docs/` を作成
-2. `templates/state.json` を元に `docs/hotl.state.json` を生成（`project` と各タイムスタンプを埋める。`phase` は `"hearing"`）
-3. git repo でなければ `git init`。`git config user.name` が未設定ならリポジトリローカルに `user.name` / `user.email` を設定する（例: `hotl` / `hotl@localhost`。これが無いと以後の全 commit が失敗する）
+2. `templates/state.json` を元に `docs/hotl.state.json` を生成（`project` と各タイムスタンプを埋める。`project` は Claude Code ならディレクトリ名、nanoclaw なら Step 2 で決めた名前。`phase` は `"hearing"`）
+3. git repo でなければ `git init`。`git config user.name` と `git config user.email` の**どちらかでも**未設定なら、両方をリポジトリローカルに設定する（例: `hotl` / `hotl@localhost`。これが無いと以後の全 commit が失敗する）
 4. `docs/log.md` を作成し、開始エントリを追記
 5. Step 5 へ（hearing から開始）
 
@@ -73,7 +73,7 @@ description: アプリ開発ワークフロー human-on-the-loop を実行・再
 |---|---|
 | hearing | `playbooks/01-hearing.md` |
 | requirements | `playbooks/02-requirements.md` |
-| awaiting_approval | `playbooks/02-requirements.md` — このターンを起動したユーザーメッセージを「承認の判定と記録」節で**判定することから始める**（判定の前にゲートを再提示して往復を浪費しない。判定の結果として必要な再提示は行う）。`approval.approved` が既に true なら承認手続きの途中中断なので、再判定せず残りの手順（log 記録 → Step 6 遷移）を完了させる |
+| awaiting_approval | `playbooks/02-requirements.md` — このターンを起動したユーザーメッセージを「承認の判定と記録」節で**判定することから始める**（判定の前にゲートを再提示して往復を浪費しない。判定の結果として必要な再提示は行う）。`approval.approved` が既に true の場合は承認手続きの途中中断: **まず起動メッセージの内容を確認**し、修正依頼・要件変更なら承認リセットで、停止指示なら停止で応じる。単なる再開・継続の意図なら再判定せず、残りの未実施手順（log 記録 → Step 6 遷移）を完了させる |
 | specification | `playbooks/03-specification.md` |
 | design | `playbooks/04-design.md` |
 | development | `playbooks/05-development.md` |
