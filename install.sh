@@ -16,7 +16,7 @@ FORCE=false
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --target) TARGET="${2:-}"; [[ -n "$TARGET" ]] || { echo "Error: --target にはパスが必要です" >&2; exit 1; }; shift 2 ;;
-    --mode)   MODE="${2:-}"; shift 2 ;;
+    --mode)   MODE="${2:-}"; [[ -n "$MODE" ]] || { echo "Error: --mode には nanoclaw または claude-code が必要です" >&2; exit 1; }; shift 2 ;;
     --link)   LINK=true; shift ;;
     --force)  FORCE=true; shift ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -59,6 +59,12 @@ case "$MODE" in
     exit 1
     ;;
 esac
+
+# 既に同じ symlink が張られていれば no-op
+if $LINK && [[ -L "$DEST" && "$(readlink "$DEST")" == "$SRC" ]]; then
+  echo "既にリンク済み: $DEST -> $SRC"
+  exit 0
+fi
 
 if [[ -e "$DEST" || -L "$DEST" ]]; then
   if $FORCE; then
