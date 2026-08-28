@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "framework": "human-on-the-loop",
+  "project": "<app-name>",
+  "created_at": "<ISO8601>",
+  "updated_at": "<ISO8601>",
+  "phase": "hearing",
+  "phase_history": [
+    { "phase": "hearing", "started_at": "<ISO8601>", "completed_at": null }
+  ],
+  "approval": {
+    "approved": false,
+    "approved_by": null,
+    "approved_at": null,
+    "runtime": null,
+    "document": "docs/requirements.md",
+    "document_sha256": null,
+    "git_commit": null,
+    "note": null
+  },
+  "artifacts": {
+    "hearing_notes": "docs/hearing-notes.md",
+    "requirements": "docs/requirements.md",
+    "spec": "docs/spec.md",
+    "design": "docs/design.md",
+    "tasks": "docs/tasks.md",
+    "log": "docs/log.md"
+  }
+}
