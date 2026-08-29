@@ -48,11 +48,11 @@ flowchart LR
     R[要件レビュアー<br/>fresh context]
     S[仕様化 / 設計<br/>fresh context]
     V[受け入れ検証者<br/>fresh context]
-    D[(docs/<br/>state.json・AgentTrail<br/>requirements・spec・design・tasks)]
+    D[(docs/<br/>state.json・AgentTrail<br/>hearing-notes・requirements・spec<br/>design・tasks・lessons)]
 
     H -->|回答・承認・割り込み| M
     M -->|報告（非ブロッキング）| H
-    M -->|requirements + チェックリストのみ| R
+    M -->|requirements + チェックリスト<br/>（2周目以降は前回指摘・差分も）| R
     M -->|上流ドキュメントのみ| S
     M -->|受け入れ基準 + 成果物のみ| V
     M <-->|唯一の受け渡し媒体| D
