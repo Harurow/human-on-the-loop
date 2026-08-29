@@ -52,7 +52,7 @@ description: アプリ開発ワークフロー human-on-the-loop を実行・再
 
 ## Step 3: ブートストラップ（state ファイルが無い場合のみ）
 
-1. プロジェクト直下に `docs/` を作成
+1. プロジェクト直下に `docs/` を作成。**既に docs/ があり、state.json の `artifacts` と同名のファイル（requirements.md / log.md 等）が存在する場合は上書き・追記してはならない**: hotl 管理外のファイルとして報告し、扱い（別名へ退避するか、hotl が既存内容を引き継ぐか）をユーザーに確認する
 2. `templates/state.json` を元に `docs/hotl.state.json` を生成（`project` と各タイムスタンプを埋める。`project` はプロジェクトのディレクトリ名。`phase` は `"hearing"`）
 3. git repo でなければ `git init`。`git config user.name` / `git config user.email` を確認し、**未設定の側だけ**をリポジトリローカルに設定する（例: `hotl` / `hotl@localhost`。設定済みの側は上書きしない。これが無いと以後の全 commit が失敗する）
 4. `docs/log.md` を作成し、開始エントリを追記
@@ -62,7 +62,7 @@ description: アプリ開発ワークフロー human-on-the-loop を実行・再
 
 `docs/hotl.state.json` を Read し、次を順に確認する:
 
-- **文脈復元**: 続けて `docs/log.md` の末尾（直近のエントリ数件）を Read し、直近の報告・指摘・判断を把握する。**修正依頼の内容や要件変更の差分は log.md の記録を正とする**（再開したセッションはこれ無しに「差分なし」と判断してはならない）
+- **文脈復元**: 続けて `docs/log.md` の末尾（直近のエントリ数件）を Read し、直近の報告・指摘・判断を把握する。**修正依頼の内容や要件変更の差分は log.md の記録を正とする**（再開したセッションはこれ無しに「差分なし」と判断してはならない）。`docs/lessons.md` があれば併せて確認し、封印済みの方法を避ける（P8。フェーズを問わず適用）
 - **状況確認クエリの場合**（Step 5 参照）: 以下の検査で異常（ハッシュ不一致・不変条件違反）を検知しても **state を変更しない**。異常があることの報告に留め、リセットは次に作業指示が来たときに行う
 
 - **承認済みハッシュの照合**: `approval.approved` が true の場合、`shasum -a 256 docs/requirements.md | cut -d' ' -f1`（`shasum` が無い環境は `sha256sum`。先頭フィールドがハッシュ）で現在値を計算し `approval.document_sha256` と比較する。**不一致なら自律続行してはならない**: 「承認後に要件が変更されている」ことを報告し、**承認リセット**（次 phase: `requirements`）を行って承認ゲートを再実行する
@@ -71,7 +71,7 @@ description: アプリ開発ワークフロー human-on-the-loop を実行・再
 
 ## Step 5: フェーズ実行
 
-**状況確認クエリの場合**（「進捗を教えて」等、作業の続行を求めていない質問）: playbook を実行せず、state・log.md・tasks.md を基に現状を報告してターンを終える。
+**状況確認クエリの場合**（「進捗を教えて」等、作業の続行を求めていない質問）: playbook を実行せず、state・log.md・（あれば）tasks.md を基に現状を報告してターンを終える。
 
 それ以外は `phase` に対応する playbook を Read して、その内容に従って実行する:
 
