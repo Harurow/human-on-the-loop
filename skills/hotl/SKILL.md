@@ -8,7 +8,7 @@ description: アプリ開発ワークフロー human-on-the-loop を実行・再
 このスキルはステートマシンである。プロジェクトの state ファイルを読み、現在フェーズの playbook を Read して実行する。
 承認ゲート（要件承認）以降は人間をブロックせず自律的に開発を完走する。
 
-**パス規約**: `playbooks/...` `templates/...` は、この SKILL.md と同じディレクトリ（スキルディレクトリ）からの相対パス。成果物（`docs/...`）はターゲットプロジェクトルートからの相対パス（一覧は state.json の `artifacts` に列挙）。**Step 2 でプロジェクトを特定したら、以後のコマンド・相対パスはすべてプロジェクトルートを cwd として実行する**（nanoclaw では `projects/<app>/` へ cd）。
+**パス規約**: `playbooks/...` `templates/...` は、この SKILL.md と同じディレクトリ（スキルディレクトリ）からの相対パス。成果物（`docs/...`）はターゲットプロジェクトルートからの相対パス（一覧は state.json の `artifacts` に列挙）。**Step 2 でプロジェクトを特定したら、以後のコマンド・相対パスはすべてプロジェクトルートを cwd として実行する**。
 
 **時刻**: タイムスタンプは必ず `date` コマンドの実行結果を使い、推測で書かない。state.json は `date +"%Y-%m-%dT%H:%M:%S%z"`（ISO8601）、log.md の見出しは `date +"%Y-%m-%d %H:%M"`。
 
@@ -34,27 +34,26 @@ description: アプリ開発ワークフロー human-on-the-loop を実行・再
 
 承認済み要件を無効化する場面（要件変更・矛盾発見・イテレーション開始）では、必ず次の3点をセットで行う:
 
-1. state.json の `approval` を初期状態に戻し（`approved: false`、`approved_by` / `approved_at` / `runtime` / `document_sha256` を null）、旧承認記録（承認者・日時・ハッシュ）を log.md に退避する（元々未承認で退避すべき記録が無ければ省略）
+1. state.json の `approval` を初期状態に戻し（`approved: false`、`approved_by` / `approved_at` / `document_sha256` を null）、旧承認記録（承認者・日時・ハッシュ）を log.md に退避する（元々未承認で退避すべき記録が無ければ省略）
 2. `docs/requirements.md` の承認記録節を「未承認」に戻す（これに伴い requirements.md への書き込み禁止も解除される）
 3. Step 6 を実行して phase を戻す（要件変更・矛盾発見 → `requirements`、イテレーション → `hearing`）
 
-## Step 1: ランタイム検出
+## Step 1: 準備
 
-`/workspace/group` が存在すれば **nanoclaw**、なければ **Claude Code**。
 最初に `playbooks/reporting.md` を Read し、以後の報告・質問・承認の方法はすべてそれに従う。
 
 ## Step 2: プロジェクト特定
 
-- **Claude Code**: カレントディレクトリがプロジェクト。`docs/hotl.state.json` を探す
-- **nanoclaw**: `/workspace/group/projects/*/docs/hotl.state.json` を glob。1件 → それ。複数 → ユーザーの発言から推定し、特定できなければ確認
-- **state が見つからない場合（ランタイム共通）**:
-  - 新規開発の意図が明確に読み取れる → Step 3 へ（nanoclaw ではプロジェクト名を kebab-case で決め `projects/<app-name>/` を作成）
+カレントディレクトリがプロジェクト。`docs/hotl.state.json` を探す。
+
+- **state が見つからない場合**:
+  - 新規開発の意図が明確に読み取れる → Step 3 へ
   - 「続きから」「進捗を教えて」等で新規の意図が読み取れない → **ブートストラップしてはならない**。対象プロジェクトが見つからない旨を報告し、新規開発かどうかを確認する
 
 ## Step 3: ブートストラップ（state ファイルが無い場合のみ）
 
 1. プロジェクト直下に `docs/` を作成
-2. `templates/state.json` を元に `docs/hotl.state.json` を生成（`project` と各タイムスタンプを埋める。`project` は Claude Code ならディレクトリ名、nanoclaw なら Step 2 で決めた名前。`phase` は `"hearing"`）
+2. `templates/state.json` を元に `docs/hotl.state.json` を生成（`project` と各タイムスタンプを埋める。`project` はプロジェクトのディレクトリ名。`phase` は `"hearing"`）
 3. git repo でなければ `git init`。`git config user.name` と `git config user.email` の**どちらかでも**未設定なら、両方をリポジトリローカルに設定する（例: `hotl` / `hotl@localhost`。これが無いと以後の全 commit が失敗する）
 4. `docs/log.md` を作成し、開始エントリを追記
 5. Step 5 へ（hearing から開始）

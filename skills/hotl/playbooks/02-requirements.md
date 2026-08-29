@@ -27,9 +27,7 @@
 ## 承認ゲート（唯一のブロッキングポイント）
 
 1. SKILL.md Step 6 を実行（次 phase: `awaiting_approval`）。**ランタイムを問わず、ゲート提示前に必ずこの遷移を行う**（ここでセッションが切れても要件執筆をやり直さないため）
-2. このときの報告がゲート提示を兼ねる。要件の要約（背景・MVP機能・非ゴール・成功基準を10行以内）と `docs/requirements.md` の場所を提示し、承認を求める:
-   - **Claude Code**: AskUserQuestion で「承認する / 修正を依頼する / 質問がある」を提示
-   - **nanoclaw**: 「内容が良ければ『承認』と返信してください。修正点があればそのまま指摘してください」と送り、ターン終了
+2. このときの報告がゲート提示を兼ねる。要件の要約（背景・MVP機能・非ゴール・成功基準を10行以内）と `docs/requirements.md` の場所を提示し、AskUserQuestion で「承認する / 修正を依頼する / 質問がある」を提示して承認を求める
 
 ## 承認の判定と記録
 
@@ -40,7 +38,7 @@
 - **承認されたら**:
   1. `docs/requirements.md` の承認記録節に**承認者と日時のみ**記入する。**これ以降、requirements.md には一切書き込まない**（ハッシュの対象となる最終状態を確定させるため）
   2. sha256 を計算: `shasum -a 256 docs/requirements.md | cut -d' ' -f1`（`shasum` が無い環境は `sha256sum`。先頭フィールドがハッシュ）
-  3. `docs/hotl.state.json` の `approval` を埋める: `approved: true`、`approved_by`（発言者名。不明なら "user"）、`approved_at`、`runtime`、`document_sha256`
+  3. `docs/hotl.state.json` の `approval` を埋める: `approved: true`、`approved_by`（発言者名。不明なら "user"）、`approved_at`、`document_sha256`
   4. log.md に承認を記録する
   5. SKILL.md Step 6 を実行（次 phase: `specification`）。報告で**「ここから先は自律区間です。仕様化→設計→開発を続けて実行し、進捗は報告します」と宣言して、そのまま続行する**
 

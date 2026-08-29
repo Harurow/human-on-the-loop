@@ -1,22 +1,19 @@
 #!/usr/bin/env bash
-# human-on-the-loop: hotl スキルをターゲットにインストールする
-#   ./install.sh --target <path> [--mode nanoclaw|claude-code] [--link] [--force]
-#     --target  Claude Code プロジェクトのルート、または nanoclaw の groups/<group> ディレクトリ
-#     --mode    配置モードを明示する（省略時は自動判定）
+# human-on-the-loop: hotl スキルをターゲットプロジェクトにインストールする
+#   ./install.sh --target <path> [--link] [--force]
+#     --target  Claude Code プロジェクトのルート（.claude/skills/hotl に配置される）
 #     --link    コピーの代わりに symlink を張る（フレームワーク開発中の反映用）
 #     --force   既存インストールを確認なしで上書きする（更新・非対話実行用）
 set -euo pipefail
 
 SRC="$(cd "$(dirname "$0")" && pwd)/skills/hotl"
 TARGET=""
-MODE=""
 LINK=false
 FORCE=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --target) TARGET="${2:-}"; [[ -n "$TARGET" ]] || { echo "Error: --target にはパスが必要です" >&2; exit 1; }; shift 2 ;;
-    --mode)   MODE="${2:-}"; [[ -n "$MODE" ]] || { echo "Error: --mode には nanoclaw または claude-code が必要です" >&2; exit 1; }; shift 2 ;;
     --link)   LINK=true; shift ;;
     --force)  FORCE=true; shift ;;
     *) echo "Unknown option: $1" >&2; exit 1 ;;
@@ -24,7 +21,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$TARGET" ]]; then
-  echo "Usage: ./install.sh --target <path> [--mode nanoclaw|claude-code] [--link] [--force]" >&2
+  echo "Usage: ./install.sh --target <path> [--link] [--force]" >&2
   exit 1
 fi
 if [[ ! -d "$TARGET" ]]; then
@@ -32,33 +29,7 @@ if [[ ! -d "$TARGET" ]]; then
   exit 1
 fi
 TARGET="$(cd "$TARGET" && pwd)"
-
-# 配置モード: --mode で明示、省略時は自動判定（groups/ 配下 + CLAUDE.md → nanoclaw）
-if [[ -z "$MODE" ]]; then
-  if [[ "$TARGET" == */groups/* && -f "$TARGET/CLAUDE.md" ]]; then
-    MODE="nanoclaw"
-  else
-    MODE="claude-code"
-  fi
-  echo "配置モード（自動判定）: $MODE — 誤りの場合は --mode nanoclaw|claude-code で明示してください"
-fi
-
-case "$MODE" in
-  nanoclaw)
-    DEST="$TARGET/skills/hotl"
-    if $LINK; then
-      echo "Error: nanoclaw グループへの --link は不可（コンテナが symlink 先を解決できない）。コピーで入れ直してください。" >&2
-      exit 1
-    fi
-    ;;
-  claude-code)
-    DEST="$TARGET/.claude/skills/hotl"
-    ;;
-  *)
-    echo "Error: --mode は nanoclaw または claude-code のいずれかです: $MODE" >&2
-    exit 1
-    ;;
-esac
+DEST="$TARGET/.claude/skills/hotl"
 
 # 既に同じ symlink が張られていれば no-op
 if $LINK && [[ -L "$DEST" && "$(readlink "$DEST")" == "$SRC" ]]; then
@@ -91,7 +62,6 @@ fi
 cat <<'EOS'
 
 次のステップ:
-  - Claude Code: プロジェクトでセッションを開き「新しいアプリを作りたい」等で hotl が起動します
-  - nanoclaw: コンテナ再起動後、Discord で「新しいアプリを作りたい」と送ってください
+  - プロジェクトで Claude Code のセッションを開き「新しいアプリを作りたい」等で hotl が起動します
   - 既存プロジェクトの再開は「続きから」「開発を進めて」
 EOS
