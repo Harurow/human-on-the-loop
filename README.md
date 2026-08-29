@@ -32,6 +32,7 @@ stateDiagram-v2
     development --> done: 全タスク完了 + 受け入れ検証
     done --> hearing: 新要望（承認リセット）
     specification --> requirements: 要件矛盾を発見（承認リセット）
+    design --> requirements: 要件レベルの変更（承認リセット）
     development --> requirements: 要件レベルの変更（承認リセット）
     note right of awaiting_approval: 唯一のブロッキングゲート
     note right of development: 自律区間（specification〜development）
