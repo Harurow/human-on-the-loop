@@ -70,7 +70,7 @@ flowchart LR
 
 ## インストール
 
-実体は `skills/hotl/` ディレクトリ1つ。ターゲットプロジェクトの `.claude/skills/hotl` に配置される。
+実体は `skills/` 配下の2スキル（`hotl` = プロジェクト実行の本体、`hotl-pm` = 任意のマルチプロジェクト旗振り）。ターゲットの `.claude/skills/` に配置される。
 
 ```bash
 # Claude Code プロジェクトへ
@@ -120,7 +120,7 @@ mkdir -p ~/code/hotl-projects
 
 思想レベルの原則（human-on-the-loop・提案責務・AgentTrail・コンテキスト分離・再開性・検証・lean・自律的改善）と、フレームワーク自体の変更プロセスは **[PRINCIPLES.md](PRINCIPLES.md) を正とする**。以下は実装上の決定:
 
-- **D1**: スキルは `hotl` の1つだけ。SKILL.md はステートマシンで、フェーズの詳細は `playbooks/` を随時 Read する（フェーズ別スキルの連鎖はセッション再開に脆い）
+- **D1**: プロジェクト実行のスキルは `hotl` の1つ（＋任意の旗振り `hotl-pm`）。SKILL.md はステートマシンで、フェーズの詳細は `playbooks/` を随時 Read する（フェーズ別スキルの連鎖はセッション再開に脆い）
 - **D2**: `skills/hotl/` が配布単位。playbook・テンプレートを同梱し、インストール＝ディレクトリ1つのコピー
 - **D3**: 状態はターゲット側に置く。機械可読（state.json）と人間可読（log.md）を分離
 - **D4**: 承認はコンテンツハッシュ付き。承認後の要件改変を検知してゲートを再実行（tamper-evident）
