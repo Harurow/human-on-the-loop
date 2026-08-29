@@ -1,0 +1,6 @@
+.env
+.env.*
+*.pem
+*.key
+.claude/settings.local.json
+.DS_Store

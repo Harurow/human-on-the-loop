@@ -1,0 +1,15 @@
+# 秘密情報（接続情報・キー・トークンは必ずここに挙がる形式のファイルに置く）
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.secret
+credentials*
+secrets*
+
+# Claude Code のローカル設定（個人の許可設定等を含み得る）
+.claude/settings.local.json
+
+# OS / エディタ
+.DS_Store
