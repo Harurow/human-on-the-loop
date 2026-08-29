@@ -54,7 +54,7 @@ description: アプリ開発ワークフロー human-on-the-loop を実行・再
 
 1. プロジェクト直下に `docs/` を作成
 2. `templates/state.json` を元に `docs/hotl.state.json` を生成（`project` と各タイムスタンプを埋める。`project` はプロジェクトのディレクトリ名。`phase` は `"hearing"`）
-3. git repo でなければ `git init`。`git config user.name` と `git config user.email` の**どちらかでも**未設定なら、両方をリポジトリローカルに設定する（例: `hotl` / `hotl@localhost`。これが無いと以後の全 commit が失敗する）
+3. git repo でなければ `git init`。`git config user.name` / `git config user.email` を確認し、**未設定の側だけ**をリポジトリローカルに設定する（例: `hotl` / `hotl@localhost`。設定済みの側は上書きしない。これが無いと以後の全 commit が失敗する）
 4. `docs/log.md` を作成し、開始エントリを追記
 5. Step 5 へ（hearing から開始）
 
@@ -63,6 +63,7 @@ description: アプリ開発ワークフロー human-on-the-loop を実行・再
 `docs/hotl.state.json` を Read し、次を順に確認する:
 
 - **文脈復元**: 続けて `docs/log.md` の末尾（直近のエントリ数件）を Read し、直近の報告・指摘・判断を把握する。**修正依頼の内容や要件変更の差分は log.md の記録を正とする**（再開したセッションはこれ無しに「差分なし」と判断してはならない）
+- **状況確認クエリの場合**（Step 5 参照）: 以下の検査で異常（ハッシュ不一致・不変条件違反）を検知しても **state を変更しない**。異常があることの報告に留め、リセットは次に作業指示が来たときに行う
 
 - **承認済みハッシュの照合**: `approval.approved` が true の場合、`shasum -a 256 docs/requirements.md | cut -d' ' -f1`（`shasum` が無い環境は `sha256sum`。先頭フィールドがハッシュ）で現在値を計算し `approval.document_sha256` と比較する。**不一致なら自律続行してはならない**: 「承認後に要件が変更されている」ことを報告し、**承認リセット**（次 phase: `requirements`）を行って承認ゲートを再実行する
 - **自律区間の不変条件**: `phase` が `specification` / `design` / `development` なのに `approval.approved` が true でないのは不正状態（承認前に自律区間へ入っている）。**承認リセット**（次 phase: `requirements`）でゲートからやり直す
@@ -78,7 +79,7 @@ description: アプリ開発ワークフロー human-on-the-loop を実行・再
 |---|---|
 | hearing | `playbooks/01-hearing.md` |
 | requirements | `playbooks/02-requirements.md` |
-| awaiting_approval | `playbooks/02-requirements.md` — このターンを起動したユーザーメッセージを「承認の判定と記録」節で**判定することから始める**（判定の前にゲートを再提示して往復を浪費しない。判定の結果として必要な再提示は行う）。`approval.approved` が既に true の場合は承認手続きの途中中断: **まず起動メッセージの内容を確認**し、修正依頼・要件変更なら承認リセットで、停止指示なら停止で応じる。単なる再開・継続の意図なら再判定せず、残りの未実施手順（log 記録 → Step 6 遷移）を完了させる |
+| awaiting_approval | `playbooks/02-requirements.md` — このターンを起動したユーザーメッセージを「承認の判定と記録」節で**判定することから始める**（判定の前にゲートを再提示して往復を浪費しない。判定の結果として必要な再提示は行う）。`approved` が false で起動メッセージが再開語の場合、log.md の直近に**未反映の修正依頼**が記録されていれば、ゲート再提示ではなく「修正依頼の場合」の手順から再開する。`approval.approved` が既に true の場合は承認手続きの途中中断: **まず起動メッセージの内容を確認**し、修正依頼・要件変更なら承認リセットで、停止指示なら停止で応じる。単なる再開・継続の意図なら再判定せず、残りの未実施手順（log 記録 → Step 6 遷移）を完了させる |
 | specification | `playbooks/03-specification.md` |
 | design | `playbooks/04-design.md` |
 | development | `playbooks/05-development.md` |
