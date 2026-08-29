@@ -39,6 +39,10 @@ stateDiagram-v2
     note right of development: 自律区間（specification〜development）
 ```
 
+※ 承認後の requirements.md 改変検知（sha256 不一致）は、どのフェーズからでも requirements へ戻る（承認リセット）。
+
+
+
 ### 実行アーキテクチャ（コンテキスト分離）
 
 ```mermaid
