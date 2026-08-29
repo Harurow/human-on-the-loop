@@ -59,7 +59,7 @@ flowchart LR
     M -->|報告（非ブロッキング）| H
     M -->|requirements + チェックリスト<br/>（2周目以降は前回指摘・差分も）| R
     M -->|上流ドキュメントのみ| S
-    M -->|diff + 関連仕様・設計 + checklist| C
+    M -->|diff + タスク行 + 関連仕様・設計 + checklist| C
     M -->|docs一式 / 受け入れ基準 + 成果物| V
     M <-->|唯一の受け渡し媒体| D
     R -.->|指摘| M
