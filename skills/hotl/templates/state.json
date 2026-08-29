@@ -21,6 +21,7 @@
     "spec": "docs/spec.md",
     "design": "docs/design.md",
     "tasks": "docs/tasks.md",
+    "lessons": "docs/lessons.md",
     "log": "docs/log.md"
   }
 }

@@ -90,10 +90,11 @@ flowchart LR
 | `spec.md` | 仕様書（要件トレーサビリティ表付き） |
 | `design.md` | 設計書（技術選定の理由・代替案付き） |
 | `tasks.md` | タスクバックログ。チェックボックスが進捗の唯一の真実 |
+| `lessons.md` | 知見台帳: 計測比較で採択・封印した作業方法と再試行条件。作業着手前に参照する |
 
 ## 設計メモ
 
-思想レベルの原則（human-on-the-loop・提案責務・AgentTrail・コンテキスト分離・再開性・検証・lean）と、フレームワーク自体の変更プロセスは **[PRINCIPLES.md](PRINCIPLES.md) を正とする**。以下は実装上の決定:
+思想レベルの原則（human-on-the-loop・提案責務・AgentTrail・コンテキスト分離・再開性・検証・lean・自律的改善）と、フレームワーク自体の変更プロセスは **[PRINCIPLES.md](PRINCIPLES.md) を正とする**。以下は実装上の決定:
 
 - **D1**: スキルは `hotl` の1つだけ。SKILL.md はステートマシンで、フェーズの詳細は `playbooks/` を随時 Read する（フェーズ別スキルの連鎖はセッション再開に脆い）
 - **D2**: `skills/hotl/` が配布単位。playbook・テンプレートを同梱し、インストール＝ディレクトリ1つのコピー

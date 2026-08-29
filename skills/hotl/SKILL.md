@@ -67,7 +67,7 @@ description: アプリ開発ワークフロー human-on-the-loop を実行・再
 
 - **承認済みハッシュの照合**: `approval.approved` が true の場合、`shasum -a 256 docs/requirements.md | cut -d' ' -f1`（`shasum` が無い環境は `sha256sum`。先頭フィールドがハッシュ）で現在値を計算し `approval.document_sha256` と比較する。**不一致なら自律続行してはならない**: 「承認後に要件が変更されている」ことを報告し、**承認リセット**（次 phase: `requirements`）を行って承認ゲートを再実行する
 - **自律区間の不変条件**: `phase` が `specification` / `design` / `development` なのに `approval.approved` が true でないのは不正状態（承認前に自律区間へ入っている）。**承認リセット**（次 phase: `requirements`）でゲートからやり直す
-- **イテレーション**: `phase` が `done` のプロジェクトに新しい要望が来たら、**承認リセット**（次 phase: `hearing`）で差分ヒアリングから同じ流れを回す。**イテレーションでは各フェーズとも既存成果物の差分更新**として実行する（テンプレートからの再生成をしない）
+- **イテレーション**: `phase` が `done` のプロジェクトに新しい要望が来たら、**まず要望の内容を trail に `interrupt` として記録し**（処理前に。クラッシュで失わないため）、**承認リセット**（次 phase: `hearing`）で差分ヒアリングから同じ流れを回す。**イテレーションでは各フェーズとも既存成果物の差分更新**として実行する（テンプレートからの再生成をしない）
 
 ## Step 5: フェーズ実行
 
@@ -98,7 +98,7 @@ description: アプリ開発ワークフロー human-on-the-loop を実行・再
 
 - `hearing`: 質問の返信待ち
 - `awaiting_approval`: 承認待ち
-- `done` 到達時の最終報告
+- `done` 到達時の最終報告、および done 済みプロジェクトへの応答（完了報告のみ）
 - 状況確認クエリへの応答（Step 5）
 - 停止指示への応答（reporting.md 割り込み case 1）
 - 全残タスクが人間の入力（API キー等）待ちでブロックされた場合
