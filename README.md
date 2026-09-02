@@ -61,11 +61,13 @@ flowchart LR
     M -->|requirements + チェックリスト<br/>（2周目以降は前回指摘・差分も）| R
     M -->|上流ドキュメントのみ| S
     M -->|diff + タスク行 + 関連仕様・設計 + checklist| C
+    M -->|リポジトリ + NR のセキュリティ前提<br/>+ design + checklist-security| SR
     M -->|docs一式 / 受け入れ基準 + 成果物| V
     M <-->|唯一の受け渡し媒体| D
     R -.->|指摘| M
     S -.->|spec.md / design.md| D
     C -.->|指摘| M
+    SR -.->|攻撃面と指摘| M
     V -.->|指摘・合否| M
 ```
 
