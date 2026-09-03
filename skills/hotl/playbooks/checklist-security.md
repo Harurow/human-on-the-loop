@@ -33,4 +33,4 @@
 2. ...
 ```
 
-CRITICAL/MAJOR が1件でもあれば FAIL。MINOR のみなら PASS（MINOR は 05 の3分類で②〔バックログ登録〕か「最終報告で開示」として対応記録を残す）。
+CRITICAL/MAJOR が1件でもあれば FAIL。MINOR のみなら PASS（MINOR は reporting.md の3分類で②〔バックログ登録〕か「最終報告で開示」として対応記録を残す）。
