@@ -12,7 +12,6 @@
     "approved": false,
     "approved_by": null,
     "approved_at": null,
-    "document": "docs/requirements.md",
     "document_sha256": null
   },
   "artifacts": {
