@@ -66,17 +66,20 @@ description: アプリ開発ワークフロー human-on-the-loop を実行・再
 
 ## Step 3: ブートストラップ（state ファイルが無い場合のみ）
 
-1. プロジェクト直下に `docs/` を作成。**既に docs/ があり、state.json の `artifacts` と同名のファイル（requirements.md / log.md 等）が存在する場合は上書き・追記してはならない**: hotl 管理外のファイルとして報告し、扱い（別名へ退避するか、hotl が既存内容を引き継ぐか）をユーザーに確認する
-2. `templates/state.json` を元に `docs/hotl.state.json` を生成（`project` と各タイムスタンプを埋める。`project` はプロジェクトのディレクトリ名。`phase` は `"hearing"`）
-3. git repo でなければ `git init`。`git config user.name` / `git config user.email` を確認し、**未設定の側だけ**をリポジトリローカルに設定する（例: `hotl` / `hotl@localhost`。設定済みの側は上書きしない。これが無いと以後の全 commit が失敗する）
-4. `.gitignore` が無ければ、スキルの `templates/gitignore` をコピーして作成する。**秘密情報（接続情報・API キー・トークン・パスワード）の値は .env 等の gitignore 対象ファイルにのみ置き、docs/・trail・コード・commit に書かない**（参照するときは名前と置き場所だけを書く）
-5. `docs/log.md` を作成し、開始エントリ（**ユーザーの初回要望の要旨を含める** — クラッシュしても要望が失われないように）を追記
+各手順は冪等（既にあるものは作り直さない）。**state.json は最後に生成する**（完了マーカー。途中でクラッシュしても state が無いので次回 Step 3 が残りを補う）:
+
+1. プロジェクト直下に `docs/` を作成。**既に docs/ があり、state.json の `artifacts` と同名のファイル（requirements.md / log.md 等）が存在する場合は上書き・追記してはならない**: hotl 管理外のファイルとして報告し、扱い（別名へ退避するか、hotl が既存内容を引き継ぐか）をユーザーに確認する（このターンのブートストラップで自分が作った log.md は対象外）
+2. git repo でなければ `git init`。`git config user.name` / `git config user.email` を確認し、**未設定の側だけ**をリポジトリローカルに設定する（例: `hotl` / `hotl@localhost`。設定済みの側は上書きしない。これが無いと以後の全 commit が失敗する）
+3. `.gitignore` が無ければ、スキルの `templates/gitignore` をコピーして作成する。**秘密情報（接続情報・API キー・トークン・パスワード）の値は .env 等の gitignore 対象ファイルにのみ置き、docs/・trail・コード・commit に書かない**（参照するときは名前と置き場所だけを書く）
+4. `docs/log.md` が無ければ作成し、開始エントリ（**ユーザーの初回要望の要旨を含める** — クラッシュしても要望が失われないように）を追記
+5. `templates/state.json` を元に `docs/hotl.state.json` を生成（`project` と各タイムスタンプを埋める。`project` はプロジェクトのディレクトリ名。`phase` は `"hearing"`）
 6. Step 5 へ（hearing から開始）
 
 ## Step 4: 状態読み込みと整合性チェック
 
 `docs/hotl.state.json` を Read し、次を順に確認する:
 
+- **環境の自己修復**: `docs/log.md` が無い、または git repo でない・`.gitignore` が無い場合は、Step 3 の該当手順を補ってから続ける（各手順は冪等）
 - **文脈復元**: 続けて `docs/log.md` の末尾（直近のエントリ数件）を Read し、直近の報告・指摘・判断を把握する。**修正依頼の内容や要件変更の差分は log.md の記録を正とする**（再開したセッションはこれ無しに「差分なし」と判断してはならない）。`docs/lessons.md` があれば併せて確認し、封印済みの方法を避ける（フェーズを問わず適用）
 - **inbox の消化**: `docs/inbox.md`（hotl-pm が人間の指示を届ける受け渡しファイル）が存在し内容があれば、フェーズ実行の**前に**次を行う:
   - **読んだ項目だけ**を trail に `interrupt` として転記して inbox から削除する（読取後に追記された新項目を消さない）。複数あればまとめて読み、全項目を転記する

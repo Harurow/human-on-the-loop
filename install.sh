@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # human-on-the-loop: hotl スキルをターゲットにインストールする
 #   ./install.sh --target <path> [--pm] [--link] [--force]
-#     --target  Claude Code プロジェクトのルート、または（--pm 時）ワークスペースの親フォルダ
+#     --target  Claude Code プロジェクトのルート、または（--pm 時）ワークスペース（プロジェクト群を置く親フォルダ。ここに .claude/skills/ が作られる）
 #     --pm      hotl-pm（マルチプロジェクトの旗振り役）も併せてインストールする
 #     --link    コピーの代わりに symlink を張る（フレームワーク開発中の反映用）
 #     --force   既存インストールを確認なしで上書きする（更新・非対話実行用）
