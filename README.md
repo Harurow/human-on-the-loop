@@ -54,6 +54,7 @@ flowchart LR
     S[仕様化 / 設計<br/>fresh context]
     C[コードレビュアー<br/>fresh context]
     SR[セキュリティレビュアー<br/>fresh context]
+    U[UX ウォークスルー<br/>利用者視点・fresh context]
     V[監査・受け入れ検証<br/>fresh context]
     D[(docs/<br/>state.json・AgentTrail<br/>hearing-notes・requirements・spec<br/>design・tasks・lessons)]
 
@@ -63,12 +64,14 @@ flowchart LR
     M -->|上流ドキュメントのみ| S
     M -->|diff + タスク行 + 関連仕様・設計<br/>+ 費用上限の NR 行 + checklist| C
     M -->|リポジトリ + NR のセキュリティ前提<br/>+ design + checklist-security| SR
+    M -->|ユーザー像・利用シーン<br/>+ 動作中の成果物| U
     M -->|docs一式 / 受け入れ基準 + 成果物| V
     M <-->|唯一の受け渡し媒体| D
     R -.->|指摘| M
     S -.->|spec.md / design.md| D
     C -.->|指摘| M
     SR -.->|攻撃面と指摘| M
+    U -.->|利用者の言葉の指摘| M
     V -.->|指摘・合否| M
 ```
 
