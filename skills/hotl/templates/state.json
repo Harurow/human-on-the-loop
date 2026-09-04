@@ -5,6 +5,7 @@
   "created_at": "<ISO8601>",
   "updated_at": "<ISO8601>",
   "phase": "hearing",
+  "repo": "own",
   "phase_history": [
     { "phase": "hearing", "started_at": "<ISO8601>", "completed_at": null }
   ],

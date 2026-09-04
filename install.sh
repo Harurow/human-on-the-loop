@@ -48,7 +48,7 @@ install_skill() {
     if $FORCE; then
       rm -rf "$dest"
     elif [[ -t 0 ]]; then
-      read -r -p "既に存在します: $dest — 上書きしますか？ [y/N] " ans
+      read -r -p "既に存在します: $dest — 上書きしますか？ [y/N] " ans || ans=""
       [[ "$ans" == "y" || "$ans" == "Y" ]] || { echo "スキップしました: $name"; return 0; }
       rm -rf "$dest"
     else
