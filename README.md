@@ -76,12 +76,14 @@ flowchart LR
 実体は `skills/` 配下の2スキル（`hotl` = プロジェクト実行の本体、`hotl-pm` = 任意のマルチプロジェクト旗振り）。ターゲットの `.claude/skills/` に配置される。
 
 ```bash
-# Claude Code プロジェクトへ
+git clone <this-repo> && cd human-on-the-loop
+mkdir -p ~/code/my-app
 ./install.sh --target ~/code/my-app
-
-# フレームワーク開発中は symlink で（編集が即反映される）
-./install.sh --target ~/code/my-app --link
 ```
+
+その後 `cd ~/code/my-app && claude` でセッションを開き、作りたいものを一言で伝えれば hotl がヒアリングから始める。
+
+`--link` はコピーの代わりに symlink を張る（フレームワーク開発中に編集を即反映させる用。通常は不要）。
 
 ## マルチプロジェクト運用（hotl-pm）
 
@@ -89,7 +91,7 @@ flowchart LR
 
 ```bash
 mkdir -p ~/code/hotl-projects
-./install.sh --target ~/code/hotl-projects --pm --link
+./install.sh --target ~/code/hotl-projects --pm
 ```
 
 - ワークスペース直下に1プロジェクト＝1サブディレクトリ（それぞれ独立した git リポジトリ）
