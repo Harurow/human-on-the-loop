@@ -7,7 +7,7 @@
 #     --force   既存インストールを確認なしで上書きする（更新・非対話実行用）
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")" && pwd)"
+ROOT="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
 TARGET=""
 LINK=false
 FORCE=false
