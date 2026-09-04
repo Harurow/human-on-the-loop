@@ -32,6 +32,7 @@ stateDiagram-v2
     development --> done: 全タスク完了 + 受け入れ検証
     done --> hearing: 新要望（承認リセット）
     done --> requirements: 改変検知（承認リセット）
+    done --> development: 不具合報告（承認済み基準の不合格）
     specification --> requirements: 要件矛盾を発見（承認リセット）
     design --> requirements: 要件レベルの変更（承認リセット）
     development --> requirements: 要件レベルの変更（承認リセット）
@@ -120,7 +121,7 @@ mkdir -p ~/code/hotl-projects
 | `design.md` | 設計書（技術選定の理由・代替案付き） |
 | `tasks.md` | タスクバックログ。チェックボックスが進捗の唯一の真実 |
 | `lessons.md` | 知見台帳: 計測比較で採択・封印した作業方法と再試行条件。作業着手前に参照する |
-| `inbox.md` | （PM 運用時のみ）自律区間のプロジェクト宛てに届いた人間の指示の受け渡しファイル。次のチャンクが trail へ転記して消化する |
+| `inbox.md` | （PM 運用時のみ）自律区間のプロジェクト宛てに届いた人間の指示の受け渡しファイル。次のチャンクが trail へ転記して消化する（gitignore 対象で commit されない） |
 
 ## 設計メモ
 
