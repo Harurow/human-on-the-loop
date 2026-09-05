@@ -5,6 +5,8 @@
 #     --pm      hotl-pm（マルチプロジェクトの旗振り役）も併せてインストールする
 #     --link    コピーの代わりに symlink を張る（フレームワーク開発中の反映用）
 #     --force   既存インストールを確認なしで上書きする（更新・非対話実行用）
+#   注: 既存インストールがある状態の非対話実行は --force が要る（hotl が既にある
+#       ワークスペースへ --pm だけを足す場合も同じ。--force で hotl も再配置される）
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
@@ -34,6 +36,8 @@ if [[ ! -d "$TARGET" ]]; then
 fi
 TARGET="$(cd "$TARGET" && pwd)"
 
+INSTALLED=false
+
 install_skill() {
   local name="$1"
   local src="$ROOT/skills/$name"
@@ -42,6 +46,7 @@ install_skill() {
   # 既に同じ symlink が張られていれば no-op
   if $LINK && [[ -L "$dest" && "$(readlink "$dest")" == "$src" ]]; then
     echo "既にリンク済み: $dest -> $src"
+    INSTALLED=true
     return 0
   fi
 
@@ -66,18 +71,25 @@ install_skill() {
     cp -R "$src" "$dest"
     echo "Installed: $dest"
   fi
+  INSTALLED=true
 }
 
 install_skill hotl
 $PM && install_skill hotl-pm
 
 # 導入した版を記録する（不具合報告時に版を特定するため。--link でも実体を汚さない位置に置く）
-commit="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
-mode=$($LINK && echo link || echo copy)
-printf '%s (commit %s, %s, installed %s)\n' \
-  "$VERSION" "$commit" "$mode" "$(date +"%Y-%m-%dT%H:%M:%S%z")" \
-  > "$TARGET/.claude/skills/.hotl-version"
-echo "Version: $VERSION (commit $commit)"
+# 実際に配置した場合のみ書く — 上書きを拒否してスキップしたのに記録だけ新しくなると、
+# インストール実体と記録が食い違う。
+if $INSTALLED; then
+  commit="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
+  mode=$($LINK && echo link || echo copy)
+  printf '%s (commit %s, %s, installed %s)\n' \
+    "$VERSION" "$commit" "$mode" "$(date +"%Y-%m-%dT%H:%M:%S%z")" \
+    > "$TARGET/.claude/skills/.hotl-version"
+  echo "Version: $VERSION (commit $commit)"
+else
+  echo "配置したスキルはありません（版の記録も更新していません）"
+fi
 
 cat <<'EOS'
 

@@ -11,6 +11,9 @@ secrets.*
 # Claude Code のローカル設定（個人の許可設定等を含み得る）
 .claude/settings.local.json
 
+# インストールされたスキル本体（フレームワーク側のリポジトリが正本）
+.claude/skills/
+
 # hotl-pm との受け渡し（一時ファイル）
 docs/inbox.md
 
