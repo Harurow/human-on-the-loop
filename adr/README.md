@@ -30,3 +30,4 @@
 | [009](009-review-loop-protocol.md) | レビューは回帰集を通してから新規探索。PASS 周の MINOR は反映しない | 一部 Superseded by 011 |
 | [010](010-c-locale-for-scripts.md) | シェルスクリプトはロケールを C に固定する | Accepted |
 | [011](011-bounded-review-rounds.md) | レビューは最大2周。合格条件は「回帰 NG ゼロ かつ CRITICAL ゼロ」 | Accepted |
+| [012](012-transactional-state-update.md) | 複数ファイルの状態更新は「更新開始/更新完了」で囲み、再開時は冪等にやり直す | Accepted |
