@@ -31,3 +31,4 @@
 | [010](010-c-locale-for-scripts.md) | シェルスクリプトはロケールを C に固定する | Accepted |
 | [011](011-bounded-review-rounds.md) | レビューは最大2周。合格条件は「回帰 NG ゼロ かつ CRITICAL ゼロ」 | Accepted |
 | [012](012-transactional-state-update.md) | 複数ファイルの状態更新は「更新開始/更新完了」で囲み、再開時は冪等にやり直す | Accepted |
+| [013](013-diff-update-review-scope.md) | 差分更新時の要件レビューは変更部分に限定する | Accepted |
