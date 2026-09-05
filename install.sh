@@ -94,6 +94,7 @@ $PM && install_skill hotl-pm
 if $INSTALLED; then
   commit="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
   mode=$($LINK && echo link || echo copy)
+  $SKIPPED && mode="$mode（一部は前回のまま）"
   note=""
   $SKIPPED && note=" ※一部のスキルは旧版のままスキップされました"
   # --link は実体がフレームワークのリポジトリに追従するため、commit を固定値として

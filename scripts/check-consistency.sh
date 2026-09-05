@@ -14,6 +14,13 @@
 #   - CLAUDE.md も対象外（本スクリプトが検査すべき「手順書」としてタスクが明示した一覧に
 #     含まれていない。プロジェクト運用メモであり playbook ではない）。
 #
+# 既知の見逃し（誤検知ゼロを優先した結果。AI レビュアーの目視に委ねる）:
+#   - 終端語を伴わない引用（例: 02「要件定義中の再開」、上記「人間向け文面の共通規則」）。
+#     終端語なしで拾うと本文中の言い回しを節名と誤判定するため対象外にしている。
+#     **節を参照するときは終端語（節／の手順／に従う／の書式 等）を付けて書くこと**。
+#   - 他ファイルの番号付き手順への参照（例: reporting.md から 05 の「手順4-3」）。
+#     2c は 05-development.md 内の自己参照のみを走査する。
+#
 # 依存: POSIX shell 相当の grep / sed / awk のみ（GNU 拡張・jq・python 不使用）。
 #       macOS の BSD grep/sed で動作確認済み。
 #
@@ -219,6 +226,9 @@ cat > "$WORK/file_scope.awk" <<'AWK_EOF'
 # hotl-pm 系の判定を先に行うのは、"hotl-pm SKILL.md" のような表記が
 # 後段の bare "SKILL.md" 判定にも誤ってマッチしてしまうのを防ぐため。
 function detect_scope(pre) {
+  # 「SKILL.md Step 4 の「イテレーション」」のように、ファイル名と参照の間に
+  # Step 番号が挟まる形も同じファイル指定として扱う
+  sub(/[ \t]*Step[ \t]*[0-9]+(-[0-9]+)?[ \t]*(の[ \t]*)?$/, "", pre)
   if (pre ~ /(hotl-pm(\/|[ \t])SKILL\.md|hotl-pm)`?[ \t]*(の[ \t]*)?$/) return "PM"
   if (pre ~ /PM`?[ \t]*(の[ \t]*)?$/) return "PM"
   if (pre ~ /(^|[^0-9])01`?[ \t]*(の[ \t]*)?$/) return "P01"
@@ -434,7 +444,20 @@ for f in $TARGET_MD_FILES; do
       pool_file="$WORK/pool_$scope.txt"
       note="（${scoped_path:-指定先不明} 指定）"
     fi
-    if grep -qxF "$core" "$pool_file"; then
+    if [ "$scope" = "DEFAULT" ]; then
+      # ファイル指定が無い参照は、まず自ファイルの見出しで照合する。
+      # 他ファイルにだけ同名の見出しがある場合を OK にすると、自ファイルの
+      # 見出しを改名しても他ファイルの同名ラベルに救われて見逃す。
+      own_pool="$WORK/pool_own_$(printf '%s' "$f" | tr '/.' '__').txt"
+      [ -f "$own_pool" ] || build_pool_of "$f" > "$own_pool"
+      if grep -qxF "$core" "$own_pool"; then
+        result OK "$f:$lineno: 「$name」 に対応する見出し／強調ラベルが自ファイルに存在する"
+      elif grep -qxF "$core" "$POOL"; then
+        result WARN "$f:$lineno: 「$name」 は自ファイルに無く、他ファイルの見出しと一致している（参照先を明示するか、自ファイルの見出しを確認）"
+      else
+        result FAIL "$f:$lineno: 「$name」 に対応する見出し／強調ラベルが見つからない"
+      fi
+    elif grep -qxF "$core" "$pool_file"; then
       result OK "$f:$lineno: 「$name」$note に対応する見出し／強調ラベルが存在する"
     else
       result FAIL "$f:$lineno: 「$name」$note に対応する見出し／強調ラベルが見つからない"
@@ -731,6 +754,24 @@ if [ -n "$state_phase" ]; then
   fi
 else
   result WARN "templates/state.json から phase 値を抽出できなかった"
+fi
+
+# --- 3b. 人間向けフェーズラベル表の網羅 --------------------------------------
+# reporting.md の「用語」規則は phase 名を人間向けラベルに置き換える表を持つ。
+# ここから phase が抜けると、人間向け文面に内部用語がそのまま漏れる。
+label_line="$(sgrep -n 'フェーズ名は次のラベルで書く' "$ROOT/skills/hotl/playbooks/reporting.md" | head -1)"
+if [ -z "$label_line" ]; then
+  result FAIL "skills/hotl/playbooks/reporting.md: フェーズ名のラベル表が見つからない"
+else
+  label_lineno="${label_line%%:*}"
+  label_text="$(sed -n "${label_lineno}p" "$ROOT/skills/hotl/playbooks/reporting.md")"
+  for ph in $canon; do
+    if printf '%s' "$label_text" | grep -q "$ph="; then
+      result OK "reporting.md:$label_lineno: phase \`$ph\` の人間向けラベルがある"
+    else
+      result FAIL "reporting.md:$label_lineno: phase \`$ph\` の人間向けラベルが表に無い（人間向け文面に内部用語が漏れる）"
+    fi
+  done
 fi
 
 echo "==== 4. state.json フィールド参照 ===="
