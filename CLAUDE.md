@@ -5,5 +5,7 @@
 - フレームワークに手を入れる前に **[PRINCIPLES.md](PRINCIPLES.md) を必ず読む**（思想 P1〜P8 と変更プロセス）
 - 実体は `skills/hotl/`（SKILL.md = ステートマシン、`playbooks/` = フェーズ手順、`templates/` = 成果物雛形）と `skills/hotl-pm/`（任意・マルチプロジェクトの旗振り）。`install.sh` がターゲットの `.claude/skills/` に配置する（`--pm` で旗振りも）
 - 変更後は PRINCIPLES.md「フレームワーク自体の変更プロセス」に従い、**`scripts/check-consistency.sh` で FAIL ゼロを確認 → fresh context の敵対的レビュー → 自律修正のループを PASS（CRITICAL/MAJOR ゼロ）まで回し、PASS 後に使う側の視点のレビューを1回行う**こと（レビュアーは既定モデル）
-- レビューは**1周ごとに `plans/review-log.md` に追記**する。「残作業なし」と言えるかは同ファイルの判定条件で決める（PASS 後に MINOR/NIT を反映したら、その変更を対象にもう1周必要）
+- レビューは**1周ごとに `plans/review-log.md` に追記**する。「残作業なし」と言えるかは同ファイルの判定条件で決める
+- レビュアーには **`plans/regression-scenarios.md` を必ず渡し、全件通させてから**新規の探索をさせる（回帰は fresh context のサンプリングでは検出できない）
+- **PASS した周の MINOR/NIT は反映しない**（バックログに積む）。反映すると再周が必要になり、その修正がまた次の周の MAJOR を生む
 - ランタイムは Claude Code のみ（nanoclaw 対応は 2026-08 に撤去済み。再導入しない）
