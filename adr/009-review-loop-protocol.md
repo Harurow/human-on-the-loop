@@ -1,6 +1,6 @@
 # ADR-009: レビューは回帰集を通してから新規探索。PASS 周の MINOR は反映しない
 
-**状態**: Accepted（2026-09-05）／**関連**: `plans/regression-scenarios.md`・`plans/review-backlog.md`
+**状態**: Accepted（2026-09-05）。**「PASS まで反復」の部分は ADR-011 で Superseded**（最大2周に有界化）／**関連**: `plans/regression-scenarios.md`・`plans/review-backlog.md`
 
 ## 文脈
 fresh context の敵対的レビュー → 自律修正のループで品質を上げてきたが、43〜51周で **MAJOR 23件のうち14件が「前の周の修正が原因」**になり、指摘が3箇所で振動して収束しなくなった。

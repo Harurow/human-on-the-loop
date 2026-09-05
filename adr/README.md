@@ -27,5 +27,6 @@
 | [006](006-human-input-routing-table.md) | 人間の入力の経路は SKILL.md の1表を正とする | Accepted |
 | [007](007-pm-chunk-boundaries.md) | PM の委譲は区切り単位。検証はサブエージェント不可なら検証チャンクに分ける | Accepted |
 | [008](008-ledger-commit-discipline.md) | 台帳（docs/）は更新のたび commit し、WIP の破棄は実装ファイルに限る | Accepted |
-| [009](009-review-loop-protocol.md) | レビューは回帰集を通してから新規探索。PASS 周の MINOR は反映しない | Accepted |
+| [009](009-review-loop-protocol.md) | レビューは回帰集を通してから新規探索。PASS 周の MINOR は反映しない | 一部 Superseded by 011 |
 | [010](010-c-locale-for-scripts.md) | シェルスクリプトはロケールを C に固定する | Accepted |
+| [011](011-bounded-review-rounds.md) | レビューは最大2周。合格条件は「回帰 NG ゼロ かつ CRITICAL ゼロ」 | Accepted |
