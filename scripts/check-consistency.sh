@@ -463,7 +463,13 @@ cat > "$WORK/tejun.awk" <<'AWK_EOF'
 END {
   sec = 0
   for (i = 1; i <= n; i++) {
-    if (lines[i] ~ /^## /) sec++
+    if (lines[i] ~ /^## /) {
+      sec++
+      h = lines[i]
+      sub(/^##[ \t]*/, "", h)
+      gsub(/\*/, "", h)
+      secname[sec] = h
+    }
     linesec[i] = sec
     line = lines[i]
     if (match(line, /^[ \t]*[0-9]+(\.[0-9]+)?\./)) {
@@ -479,6 +485,28 @@ END {
     while (match(rest, /手順[0-9]+(\.[0-9]+)?(-[0-9]+)?/)) {
       ref = substr(rest, RSTART, RLENGTH)
       s = linesec[i]
+      # 参照の直前が 「<節名>」の … なら、その節の番号集合で照合する
+      # （節をまたぐ参照を自節の番号で誤って OK にしないため）
+      abs_start = (length(line) - length(rest)) + RSTART
+      pre = substr(line, 1, abs_start - 1)
+      if (length(pre) >= 6 && substr(pre, length(pre) - 5) == "」の") {
+        inner = substr(pre, 1, length(pre) - 6)
+        lo = 0
+        q = 1
+        while (1) {
+          r2 = substr(inner, q)
+          i2 = index(r2, "「")
+          if (i2 == 0) break
+          lo = q + i2 - 1
+          q = lo + 1
+        }
+        if (lo > 0) {
+          nm = substr(inner, lo + 3)
+          for (k = 1; k <= sec; k++) {
+            if (nm != "" && index(secname[k], nm) > 0) { s = k; break }
+          }
+        }
+      }
       body = ref
       sub(/^手順/, "", body)
       main = body

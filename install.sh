@@ -86,9 +86,17 @@ if $INSTALLED; then
   mode=$($LINK && echo link || echo copy)
   note=""
   $SKIPPED && note=" ※一部のスキルは旧版のままスキップされました"
-  printf '%s (commit %s, %s, installed %s)%s\n' \
-    "$VERSION" "$commit" "$mode" "$(date +"%Y-%m-%dT%H:%M:%S%z")" "$note" \
-    > "$TARGET/.claude/skills/.hotl-version"
+  # --link は実体がフレームワークのリポジトリに追従するため、commit を固定値として
+  # 記録すると陳腐化する。link の場合は追従する旨だけを残す。
+  if $LINK; then
+    printf '%s (link — 実体は %s に追従。記録時 commit %s, linked %s)%s\n' \
+      "$VERSION" "$ROOT" "$commit" "$(date +"%Y-%m-%dT%H:%M:%S%z")" "$note" \
+      > "$TARGET/.claude/skills/.hotl-version"
+  else
+    printf '%s (commit %s, %s, installed %s)%s\n' \
+      "$VERSION" "$commit" "$mode" "$(date +"%Y-%m-%dT%H:%M:%S%z")" "$note" \
+      > "$TARGET/.claude/skills/.hotl-version"
+  fi
   echo "Version: $VERSION (commit $commit)$note"
 else
   echo "配置したスキルはありません（版の記録も更新していません）"
