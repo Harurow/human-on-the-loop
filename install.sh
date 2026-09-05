@@ -8,6 +8,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
+VERSION="$(cat "$ROOT/VERSION" 2>/dev/null || echo "unknown")"
 TARGET=""
 LINK=false
 FORCE=false
@@ -69,6 +70,14 @@ install_skill() {
 
 install_skill hotl
 $PM && install_skill hotl-pm
+
+# 導入した版を記録する（不具合報告時に版を特定するため。--link でも実体を汚さない位置に置く）
+commit="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
+mode=$($LINK && echo link || echo copy)
+printf '%s (commit %s, %s, installed %s)\n' \
+  "$VERSION" "$commit" "$mode" "$(date +"%Y-%m-%dT%H:%M:%S%z")" \
+  > "$TARGET/.claude/skills/.hotl-version"
+echo "Version: $VERSION (commit $commit)"
 
 cat <<'EOS'
 

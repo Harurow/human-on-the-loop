@@ -75,6 +75,9 @@ flowchart LR
     V -.->|指摘・合否| M
 ```
 
+※ 図の辺ラベルは概略。**各役割に実際に渡す入力の正は各 playbook の記述**（`skills/hotl/playbooks/`）。
+
+
 ## インストール
 
 実体は `skills/` 配下の2スキル（`hotl` = プロジェクト実行の本体、`hotl-pm` = 任意のマルチプロジェクト旗振り）。ターゲットの `.claude/skills/` に配置される。
@@ -88,6 +91,8 @@ mkdir -p ~/code/my-app
 その後 `cd ~/code/my-app && claude` でセッションを開き、作りたいものを一言で伝えれば hotl がヒアリングから始める。
 
 `--link` はコピーの代わりに symlink を張る（フレームワーク開発中に編集を即反映させる用。通常は不要）。
+
+導入した版は `.claude/skills/.hotl-version` に記録される（不具合報告のときはこの行を添えると特定が速い）。版ごとの変更は [CHANGELOG.md](CHANGELOG.md) を参照。
 
 ## マルチプロジェクト運用（hotl-pm）
 

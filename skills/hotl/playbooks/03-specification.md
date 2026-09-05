@@ -45,4 +45,4 @@
 
 ## 完了
 
-SKILL.md Step 6 を実行（次 phase: `design`）し、Step 6 に従い `04-design.md` を Read して続行する。
+SKILL.md Step 6 を実行（次 phase: `design`）。

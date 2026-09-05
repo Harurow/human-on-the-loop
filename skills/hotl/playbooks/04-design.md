@@ -48,4 +48,4 @@ spec.md のすべての仕様項目 (S-n) がモジュール構成表のどこ�
 
 ## 完了
 
-SKILL.md Step 6 を実行（次 phase: `development`）し、Step 6 に従い `05-development.md` を Read して続行する。
+SKILL.md Step 6 を実行（次 phase: `development`）。
