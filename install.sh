@@ -60,8 +60,8 @@ install_skill() {
   # 既存 symlink の指す先は実体パスで比較する（/tmp と /private/tmp のように
   # 表記が違っても同じ場所を指すため）
   if $LINK && [[ -L "$dest" ]] && \
-     [[ "$(cd "$(dirname "$(readlink "$dest")")" 2>/dev/null && pwd)/$(basename "$(readlink "$dest")")" \
-        == "$(cd "$(dirname "$src")" && pwd)/$(basename "$src")" ]]; then
+     [[ "$(cd "$(dirname "$(readlink "$dest")")" 2>/dev/null && pwd -P)/$(basename "$(readlink "$dest")")" \
+        == "$(cd "$(dirname "$src")" && pwd -P)/$(basename "$src")" ]]; then
     echo "既にリンク済み: $dest -> $src"
     INSTALLED=true
     return 0
