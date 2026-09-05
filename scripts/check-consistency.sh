@@ -33,7 +33,17 @@ set -euo pipefail
 # 0. セットアップ
 # ---------------------------------------------------------------------------
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# 起動パスが symlink でも実体のディレクトリを解決する（macOS の readlink には
+# -f が無い版があるため手動で辿る）
+_self="$0"
+while [ -L "$_self" ]; do
+  _link="$(readlink "$_self")"
+  case "$_link" in
+    /*) _self="$_link" ;;
+    *)  _self="$(dirname "$_self")/$_link" ;;
+  esac
+done
+SCRIPT_DIR="$(cd "$(dirname "$_self")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT"
 

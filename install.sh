@@ -57,7 +57,11 @@ install_skill() {
   local dest="$TARGET/.claude/skills/$name"
 
   # 既に同じ symlink が張られていれば no-op
-  if $LINK && [[ -L "$dest" && "$(readlink "$dest")" == "$src" ]]; then
+  # 既存 symlink の指す先は実体パスで比較する（/tmp と /private/tmp のように
+  # 表記が違っても同じ場所を指すため）
+  if $LINK && [[ -L "$dest" ]] && \
+     [[ "$(cd "$(dirname "$(readlink "$dest")")" 2>/dev/null && pwd)/$(basename "$(readlink "$dest")")" \
+        == "$(cd "$(dirname "$src")" && pwd)/$(basename "$src")" ]]; then
     echo "既にリンク済み: $dest -> $src"
     INSTALLED=true
     return 0
