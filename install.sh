@@ -9,7 +9,17 @@
 #       ワークスペースへ --pm だけを足す場合も同じ。--force で hotl も再配置される）
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$(readlink -f "$0" 2>/dev/null || echo "$0")")" && pwd)"
+# 起動パスが symlink でも実体のディレクトリを得る（macOS の readlink には -f が
+# 無い版があるため、手動で辿る）
+_self="$0"
+while [ -L "$_self" ]; do
+  _link="$(readlink "$_self")"
+  case "$_link" in
+    /*) _self="$_link" ;;
+    *)  _self="$(dirname "$_self")/$_link" ;;
+  esac
+done
+ROOT="$(cd "$(dirname "$_self")" && pwd)"
 VERSION="$(cat "$ROOT/VERSION" 2>/dev/null || echo "unknown")"
 TARGET=""
 LINK=false
