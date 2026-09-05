@@ -133,7 +133,7 @@ mkdir -p ~/code/hotl-projects
 
 ## 設計メモ
 
-思想レベルの原則（human-on-the-loop・提案責務・AgentTrail・コンテキスト分離・再開性・検証・lean・自律的改善）と、フレームワーク自体の変更プロセスは **[PRINCIPLES.md](PRINCIPLES.md) を正とする**。以下は実装上の決定:
+思想レベルの原則（human-on-the-loop・提案責務・AgentTrail・コンテキスト分離・再開性・検証・lean・自律的改善）と、フレームワーク自体の変更プロセスは **[PRINCIPLES.md](PRINCIPLES.md) を正とする**。個別の判断とその理由・退けた案は **[adr/](adr/)**（ADR）にある。以下は実装上の決定:
 
 - **D1**: プロジェクト実行のスキルは `hotl` の1つ（＋任意の旗振り `hotl-pm`）。SKILL.md はステートマシンで、フェーズの詳細は `playbooks/` を随時 Read する（フェーズ別スキルの連鎖はセッション再開に脆い）
 - **D2**: `skills/hotl/` が配布単位。playbook・テンプレートを同梱し、インストール＝ディレクトリ1つのコピー

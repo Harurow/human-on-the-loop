@@ -6,6 +6,7 @@
 - 実体は `skills/hotl/`（SKILL.md = ステートマシン、`playbooks/` = フェーズ手順、`templates/` = 成果物雛形）と `skills/hotl-pm/`（任意・マルチプロジェクトの旗振り）。`install.sh` がターゲットの `.claude/skills/` に配置する（`--pm` で旗振りも）
 - 変更後は PRINCIPLES.md「フレームワーク自体の変更プロセス」に従い、**`scripts/check-consistency.sh` で FAIL ゼロを確認 → fresh context の敵対的レビュー → 自律修正のループを PASS（CRITICAL/MAJOR ゼロ）まで回し、PASS 後に使う側の視点のレビューを1回行う**こと（レビュアーは既定モデル）
 - レビューは**1周ごとに `plans/review-log.md` に追記**する。「残作業なし」と言えるかは同ファイルの判定条件で決める
-- レビュアーには **`plans/regression-scenarios.md` を必ず渡し、全件通させてから**新規の探索をさせる（回帰は fresh context のサンプリングでは検出できない）
+- レビュアーには **`plans/regression-scenarios.md` を必ず渡し、全件通させてから**新規の探索をさせる（回帰は fresh context のサンプリングでは検出できない）。**ADR とレビュー履歴は渡さない**（敵対性が落ちる）
+- **指摘を修正する前に [adr/](adr/) と照合する**。ADR の決定と矛盾する指摘は、再検討の条件を満たさない限り**却下**し、ADR の「再指摘の履歴」に記録する。振る舞いの判断をしたら ADR を1枚書く
 - **PASS した周の MINOR/NIT は反映しない**（バックログに積む）。反映すると再周が必要になり、その修正がまた次の周の MAJOR を生む
 - ランタイムは Claude Code のみ（nanoclaw 対応は 2026-08 に撤去済み。再導入しない）

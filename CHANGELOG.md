@@ -46,6 +46,13 @@
 - **`scripts/check-consistency.sh` が macOS の標準ターミナルで異常終了していた**（`LANG=ja_JP.UTF-8` × bash 3.2 の組み合わせ。`$var` の直後に多バイト文字が続くコードを bash 3.2 のパーサが誤解析する）。C ロケールで動く環境（Claude Code の Bash など）では通っていたため気づきにくかった。スクリプト内で `LC_ALL=C` に固定し、UTF-8 ロケール × bash 3.2・zsh 経由・C ロケールの3通りで同一結果を確認
 - `install.sh` の対話モードで上書きを拒否すると、同じ原因で `unbound variable` 終了していた（`--pm` だけを足す手順がヘッダに書かれているのに実行できなかった）
 
+### 追加（レビューの収束）
+
+- **`adr/`（Architecture Decision Record）**: 振る舞いを決めた判断を1件1ファイルで記録する（決定・理由・**退けた案**・**再検討の条件**・再指摘の履歴）。ADR-001〜010 を起票。**レビュアーには渡さず**（敵対性を保つため）、指摘を受けた側が照合して「supersede するか却下するか」を判断する
+- **`plans/regression-scenarios.md`**: 過去の CRITICAL/MAJOR を40シナリオに落としたもの。毎周のレビューで全件通してから新規探索する
+- **`plans/review-backlog.md`**: PASS 周の MINOR/NIT を積む場所（反映して再周する運用をやめた）
+- `scripts/check-consistency.sh` に ADR 索引の整合検査を追加（319 検査）
+
 ### 変更
 
 - 承認済み要件の凍結（`approval.approved` が true の間は requirements.md を書き換えない）を SKILL.md の共通規則に格上げ

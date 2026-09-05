@@ -829,6 +829,30 @@ EOF2
   done
 fi
 
+echo "==== 3d. ADR の索引と実体の一致 ===="
+
+# adr/README.md の一覧表と adr/*.md の実体がずれていないか（索引の陳腐化を防ぐ）
+if [ -d "$ROOT/adr" ]; then
+  for f in "$ROOT"/adr/[0-9]*.md; do
+    [ -e "$f" ] || continue
+    base="$(basename "$f")"
+    # sgrep は「|| true」なので真偽判定には使えない。ここは grep を直接使う
+    if grep -qF "($base)" "$ROOT/adr/README.md"; then
+      result OK "adr/$base は README.md の一覧にある"
+    else
+      result FAIL "adr/$base が adr/README.md の一覧に無い"
+    fi
+  done
+  sgrep -oE '\]\([0-9]{3}-[a-z0-9-]+\.md\)' "$ROOT/adr/README.md" | tr -d ']()' | while IFS= read -r ref; do
+    [ -z "$ref" ] && continue
+    if [ -e "$ROOT/adr/$ref" ]; then
+      result OK "adr/README.md の参照 $ref は実在する"
+    else
+      result FAIL "adr/README.md が参照する adr/$ref が存在しない"
+    fi
+  done
+fi
+
 echo "==== 4. state.json フィールド参照 ===="
 
 # templates/state.json をインデント幅で簡易パースし、
