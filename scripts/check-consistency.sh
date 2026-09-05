@@ -165,13 +165,13 @@ $matches
 EOF
 done
 
-echo "==== 2a. 見出し相互参照: Step N（SKILL.md / hotl-pm / 05-development 各見出し） ===="
+echo "==== 0. ファイル接頭辞の解決（2a・2b 共通） ===="
 
-# 各ファイルの "## Step N" 見出し番号集合を取る
-skill_steps="$(sgrep -oE '^## Step [0-9]+' "$ROOT/skills/hotl/SKILL.md" | sgrep -oE '[0-9]+' | tr '\n' ' ')"
-pm_steps="$(sgrep -oE '^## Step [0-9]+' "$ROOT/skills/hotl-pm/SKILL.md" | sgrep -oE '[0-9]+' | tr '\n' ' ')"
-dev_steps="$(sgrep -oE '^## Step [0-9]+' "$ROOT/skills/hotl/playbooks/05-development.md" | sgrep -oE '[0-9]+' | tr '\n' ' ')"
-
+# 参照の直前に「05」「hotl-pm/SKILL.md」「reporting.md」等のファイル・スキル名の
+# 指定がある場合、その参照は自ファイル∪hotl SKILL.md の和ではなく**指定された
+# ファイルの集合だけ**で照合する（指定が無ければ従来どおり）。
+# detect_scope() はこの判定を Step N 参照（2a）と「XXX」節参照（2b）の両方から
+# 共有で使う。スコープコードと実ファイルの対応は scope_path() に一本化する。
 in_set() {
   # $1=needle $2=space separated haystack
   case " $2 " in
@@ -180,98 +180,247 @@ in_set() {
   esac
 }
 
+scope_path() {
+  case "$1" in
+    PM) echo "skills/hotl-pm/SKILL.md" ;;
+    HOTL) echo "skills/hotl/SKILL.md" ;;
+    P01) echo "skills/hotl/playbooks/01-hearing.md" ;;
+    P02) echo "skills/hotl/playbooks/02-requirements.md" ;;
+    P03) echo "skills/hotl/playbooks/03-specification.md" ;;
+    P04) echo "skills/hotl/playbooks/04-design.md" ;;
+    P05) echo "skills/hotl/playbooks/05-development.md" ;;
+    RPT) echo "skills/hotl/playbooks/reporting.md" ;;
+    CKCODE) echo "skills/hotl/playbooks/checklist-code.md" ;;
+    CKREQ) echo "skills/hotl/playbooks/checklist-requirements.md" ;;
+    CKSEC) echo "skills/hotl/playbooks/checklist-security.md" ;;
+    REQMD) echo "skills/hotl/templates/requirements.md" ;;
+    SPECMD) echo "skills/hotl/templates/spec.md" ;;
+    DESIGNMD) echo "skills/hotl/templates/design.md" ;;
+    TASKSMD) echo "skills/hotl/templates/tasks.md" ;;
+    RDME) echo "README.md" ;;
+    PRIN) echo "PRINCIPLES.md" ;;
+    *) echo "" ;;
+  esac
+}
+
+# scope_path() が返す全スコープコード（2b のファイル別見出しプール構築で使う）
+ALL_SCOPE_CODES="PM HOTL P01 P02 P03 P04 P05 RPT CKCODE CKREQ CKSEC REQMD SPECMD DESIGNMD TASKSMD RDME PRIN"
+
+steps_of_file() {
+  # $1 = ルートからの相対パス（空文字なら集合も空）
+  [ -z "$1" ] && return 0
+  sgrep -oE '^## Step [0-9]+' "$ROOT/$1" | sgrep -oE '[0-9]+' | tr '\n' ' '
+}
+
+cat > "$WORK/file_scope.awk" <<'AWK_EOF'
+# 直前の文脈 (pre = 参照より前のテキスト) から、参照先ファイルを特定できる
+# 「ファイル接頭辞」があるかどうかを判定する共有関数。無ければ "DEFAULT"。
+# 接頭辞とバックティック/空白/「の」の間には多少のゆらぎを許容する。
+# hotl-pm 系の判定を先に行うのは、"hotl-pm SKILL.md" のような表記が
+# 後段の bare "SKILL.md" 判定にも誤ってマッチしてしまうのを防ぐため。
+function detect_scope(pre) {
+  if (pre ~ /(hotl-pm(\/|[ \t])SKILL\.md|hotl-pm)`?[ \t]*(の[ \t]*)?$/) return "PM"
+  if (pre ~ /PM`?[ \t]*(の[ \t]*)?$/) return "PM"
+  if (pre ~ /(^|[^0-9])01`?[ \t]*(の[ \t]*)?$/) return "P01"
+  if (pre ~ /(^|[^0-9])02`?[ \t]*(の[ \t]*)?$/) return "P02"
+  if (pre ~ /(^|[^0-9])03`?[ \t]*(の[ \t]*)?$/) return "P03"
+  if (pre ~ /(^|[^0-9])04`?[ \t]*(の[ \t]*)?$/) return "P04"
+  if (pre ~ /(^|[^0-9])05`?[ \t]*(の[ \t]*)?$/) return "P05"
+  if (pre ~ /reporting\.md`?[ \t]*(の[ \t]*)?$/) return "RPT"
+  if (pre ~ /checklist-code\.md`?[ \t]*(の[ \t]*)?$/) return "CKCODE"
+  if (pre ~ /checklist-requirements\.md`?[ \t]*(の[ \t]*)?$/) return "CKREQ"
+  if (pre ~ /checklist-security\.md`?[ \t]*(の[ \t]*)?$/) return "CKSEC"
+  if (pre ~ /requirements\.md`?[ \t]*(の[ \t]*)?$/) return "REQMD"
+  if (pre ~ /spec\.md`?[ \t]*(の[ \t]*)?$/) return "SPECMD"
+  if (pre ~ /design\.md`?[ \t]*(の[ \t]*)?$/) return "DESIGNMD"
+  if (pre ~ /tasks\.md`?[ \t]*(の[ \t]*)?$/) return "TASKSMD"
+  if (pre ~ /README\.md`?[ \t]*(の[ \t]*)?$/) return "RDME"
+  if (pre ~ /PRINCIPLES\.md`?[ \t]*(の[ \t]*)?$/) return "PRIN"
+  if (pre ~ /hotl[ \t]SKILL\.md`?[ \t]*(の[ \t]*)?$/) return "HOTL"
+  if (pre ~ /hotl`?[ \t]*(の[ \t]*)?$/) return "HOTL"
+  if (pre ~ /SKILL\.md`?[ \t]*(の[ \t]*)?$/) return "HOTL"
+  return "DEFAULT"
+}
+AWK_EOF
+
+echo "==== 2a. 見出し相互参照: Step N（ファイル指定があればそのファイルのみ、無ければ自ファイル∪hotl SKILL.md） ===="
+
+# 各ファイルの "## Step N" 見出し番号集合（ファイル指定が無い参照のデフォルト判定用）
+skill_steps="$(steps_of_file skills/hotl/SKILL.md)"
+pm_steps="$(steps_of_file skills/hotl-pm/SKILL.md)"
+dev_steps="$(steps_of_file skills/hotl/playbooks/05-development.md)"
+
+cat > "$WORK/step_scope.awk" <<'AWK_EOF'
+# 行内の "Step N" 参照ごとに、直前の文脈から参照先ファイルのスコープを
+# detect_scope() で判定し、行番号・番号・スコープ・元の表記を tab 区切りで出す。
+{
+  line = $0
+  rest = line
+  base = 0
+  while (match(rest, /Step[ ]?[0-9]+/)) {
+    mstart = RSTART; mlen = RLENGTH
+    stepref = substr(rest, mstart, mlen)
+    numpart = stepref
+    gsub(/[^0-9]/, "", numpart)
+    abs_start = base + mstart
+    pre = substr(line, 1, abs_start - 1)
+    scope = detect_scope(pre)
+    print FNR "\t" numpart "\t" scope "\t" stepref
+    base = base + mstart + mlen - 1
+    rest = substr(rest, mstart + mlen)
+  }
+}
+AWK_EOF
+
 for f in $TARGET_MD_FILES; do
-  matches="$(sgrep -noE 'Step[ ]?[0-9]+' "$ROOT/$f")"
+  matches="$(awk -f "$WORK/file_scope.awk" -f "$WORK/step_scope.awk" "$ROOT/$f" || true)"
   [ -z "$matches" ] && continue
   case "$f" in
-    skills/hotl-pm/SKILL.md) allowed="$pm_steps $skill_steps" ;;
-    skills/hotl/playbooks/05-development.md) allowed="$dev_steps $skill_steps" ;;
-    *) allowed="$skill_steps" ;;
+    skills/hotl-pm/SKILL.md) default_allowed="$pm_steps $skill_steps" ;;
+    skills/hotl/playbooks/05-development.md) default_allowed="$dev_steps $skill_steps" ;;
+    *) default_allowed="$skill_steps" ;;
   esac
-  while IFS= read -r line; do
-    [ -z "$line" ] && continue
-    lineno="${line%%:*}"
-    ref="${line#*:}"
-    n="$(printf '%s' "$ref" | sgrep -oE '[0-9]+')"
-    if in_set "$n" "$allowed"; then
-      result OK "$f:$lineno: Step $n は実在する見出しを指す"
+  while IFS="$(printf '\t')" read -r lineno n scope ref; do
+    [ -z "$lineno" ] && continue
+    if [ "$scope" = "DEFAULT" ]; then
+      allowed="$default_allowed"
+      note=""
     else
-      result FAIL "$f:$lineno: \`$ref\` に対応する見出しが見つからない（既知の Step 番号: $allowed）"
+      scoped_path="$(scope_path "$scope")"
+      allowed="$(steps_of_file "$scoped_path")"
+      note="（${scoped_path:-指定先不明} 指定）"
+    fi
+    if in_set "$n" "$allowed"; then
+      result OK "$f:$lineno: \`$ref\`$note は実在する見出しを指す"
+    else
+      result FAIL "$f:$lineno: \`$ref\`$note に対応する見出しが見つからない（既知の Step 番号: ${allowed:-なし}）"
     fi
   done <<EOF
 $matches
 EOF
 done
 
-echo "==== 2b. 見出し相互参照: 「XXX」節（quoted section name） ===="
+echo "==== 2b. 見出し相互参照: 「XXX」節／の手順／に従う／の書式（quoted section name） ===="
 
 # 見出しプール: 対象 Markdown ファイルの "## " 見出しと、"- **XXX**:" 形式の
 # 強調ラベル（本フレームワークで「節」相当として頻用される記法）を集める。
 # 見出しコアは "（"/"(" より前を使う（例: "## 非機能（性能と…）" -> "非機能"）。
+# 見出しに "Step N: " が付く場合（例: "## Step 4: 状態読み込みと整合性チェック"）は、
+# 剥がした版もプールに加える。「状態読み込みと整合性チェック」節のように Step 番号
+# を省いた引用が偽 FAIL になるのを防ぐため（引用側にも Step 接頭辞を許す必要は無い
+# ため、引用側の剥がし処理は不要）。
 # 「この節」「同節」「該当節」等の代名詞的参照はここでは解決できないため対象外
 # （散文で言い換えられた節名の一致は PRINCIPLES.md が「機械チェックでは
 # 捕まらないもの」として明示的にレビュアーへ委ねている）。
+#
+# ファイル別プール: 「05「完了」」のように参照の直前にファイル・スキル名の指定が
+# あれば、その参照は全ファイル横断のプールではなく**そのファイル自身の見出し／
+# ラベルだけ**で照合する（同名の節が複数ファイルに存在するときの見逃しを防ぐ）。
+# scope_path() が返す全スコープはちょうど対象ファイル一覧と1対1に対応するため、
+# 全スコープ分のファイル別プールを作れば、その和集合がそのまま従来の全体プールになる。
+build_pool_of() {
+  # $1 = ルートからの相対パス
+  {
+    sgrep -E '^#{1,6} ' "$ROOT/$1" | sed -E 's/^#{1,6} //'
+    sgrep -E '^[ 	]*-[ ]+\*\*[^*]+\*\*' "$ROOT/$1" | sed -E 's/^[ 	]*-[ ]+\*\*//; s/\*\*.*$//'
+  } \
+    | sed -E 's/(（|\().*$//' \
+    | sed -E 's/[[:space:]]*(:|：)[[:space:]]*$//' \
+    | sed -E 's/[[:space:]]+$//' \
+    | awk '{ print; s = $0; n = sub(/^Step [0-9]+:[ ]*/, "", s); if (n > 0 && s != "") print s }' \
+    | sort -u
+}
+
 POOL="$WORK/heading_pool.txt"
 : > "$POOL"
-for f in $TARGET_MD_FILES; do
-  sgrep -E '^#{1,6} ' "$ROOT/$f" | sed -E 's/^#{1,6} //'
-  sgrep -E '^[ 	]*-[ ]+\*\*[^*]+\*\*' "$ROOT/$f" | sed -E 's/^[ 	]*-[ ]+\*\*//; s/\*\*.*$//'
-done \
-  | sed -E 's/(（|\().*$//' \
-  | sed -E 's/[[:space:]]*(:|：)[[:space:]]*$//' \
-  | sed -E 's/[[:space:]]+$//' \
-  | sort -u > "$POOL"
+for sc in $ALL_SCOPE_CODES; do
+  scoped_path="$(scope_path "$sc")"
+  build_pool_of "$scoped_path" > "$WORK/pool_$sc.txt"
+  cat "$WORK/pool_$sc.txt" >> "$POOL"
+done
+sort -u -o "$POOL" "$POOL"
 
-# 「XXX」節 の抽出は正規表現の1発マッチに頼らない。理由: 「.{1,20}」節 のような
-# 貪欲マッチは、同じ行に複数の「...」対がある場合に最初の「から最後の」節までを
-# 一つに merge してしまうことがあり（POSIX ERE の leftmost-longest）、かといって
-# 否定ブラケット `[^」]` は多バイト文字をブラケット式に入れることになり C ロケールで
-# 文字列を破壊する（本スクリプト冒頭の注記）。そこで awk の index()/substr() で
-# 「各」節」出現ごとに直前の最も近い「を手動で探す」処理を書く。「と」節はいずれも
-# 3 バイトの UTF-8 文字だが、awk（macOS 標準の one-true-awk）の index()/substr() は
-# バイト単位で動作するため、バイト長を明示して境界を計算する。
+# 「XXX」節／の手順／に従う／の書式 の抽出は正規表現の1発マッチに頼らない。
+# 理由: 「.{1,20}」節 のような貪欲マッチは、同じ行に複数の「...」対がある場合に
+# 最初の「から最後の」節までを一つに merge してしまうことがあり（POSIX ERE の
+# leftmost-longest）、かといって否定ブラケット `[^」]` は多バイト文字をブラケット式
+# に入れることになり C ロケールで文字列を破壊する（本スクリプト冒頭の注記）。
+# そこで awk の index()/substr() で終端記法の出現ごとに直前の最も近い「を手動で
+# 探す」処理を書く。「と」節等はいずれも3バイトの UTF-8 文字だが、awk（macOS 標準
+# の one-true-awk）の index()/substr() はバイト単位で動作するため、バイト長を
+# 明示して境界を計算する。開き括弧の直前テキストは detect_scope() に渡し、
+# ファイル指定の有無を判定する。
+# 検査していない記法: 「05「完了」」のように終端語（節／の手順等）を伴わない
+# 裸の「ファイル接頭辞 + 引用」は対象外にした。実測すると「hotl-pm/SKILL.md の
+# 「同一ターン内で続行」」のように、節名ではなく単なる引用フレーズが同じ形に
+# 現れるため、終端語なしで拾うと誤検知（本文中の言い回しをプール不在で FAIL に
+# する）が生じる。終端語を伴わない参照はレビュアーの目視に委ねる。
 cat > "$WORK/quote_extract.awk" <<'AWK_EOF'
+BEGIN {
+  nsuf = 0
+  suf[nsuf++] = "」節"
+  suf[nsuf++] = "」の手順"
+  suf[nsuf++] = "」に従う"
+  suf[nsuf++] = "」の書式"
+}
 {
   line = $0
-  pos = 1
-  while (1) {
-    rest = substr(line, pos)
-    idx = index(rest, "」節")
-    if (idx == 0) break
-    abs_end = pos + idx - 1
-    prefix = substr(line, 1, abs_end - 1)
-    last_open = 0
-    p2 = 1
+  for (si = 0; si < nsuf; si++) {
+    marker = suf[si]
+    mlen_b = length(marker)
+    pos = 1
     while (1) {
-      rest2 = substr(prefix, p2)
-      idx2 = index(rest2, "「")
-      if (idx2 == 0) break
-      last_open = p2 + idx2 - 1
-      p2 = last_open + 1
+      rest = substr(line, pos)
+      idx = index(rest, marker)
+      if (idx == 0) break
+      abs_end = pos + idx - 1
+      prefix = substr(line, 1, abs_end - 1)
+      last_open = 0
+      p2 = 1
+      while (1) {
+        rest2 = substr(prefix, p2)
+        idx2 = index(rest2, "「")
+        if (idx2 == 0) break
+        last_open = p2 + idx2 - 1
+        p2 = last_open + 1
+      }
+      if (last_open > 0) {
+        namestart = last_open + 3
+        namelen = abs_end - namestart
+        if (namelen > 0) {
+          name = substr(line, namestart, namelen)
+          pre = substr(line, 1, last_open - 1)
+          scope = detect_scope(pre)
+          print FNR "\t" name "\t" scope
+        }
+      }
+      pos = abs_end + mlen_b
     }
-    if (last_open > 0) {
-      namestart = last_open + 3
-      namelen = abs_end - namestart
-      if (namelen > 0) print FNR "\t" substr(line, namestart, namelen)
-    }
-    pos = abs_end + 6
   }
 }
 AWK_EOF
 
 for f in $TARGET_MD_FILES; do
-  matches="$(awk -f "$WORK/quote_extract.awk" "$ROOT/$f" || true)"
+  matches="$(awk -f "$WORK/file_scope.awk" -f "$WORK/quote_extract.awk" "$ROOT/$f" || true)"
   [ -z "$matches" ] && continue
-  while IFS="$(printf '\t')" read -r lineno name; do
+  while IFS="$(printf '\t')" read -r lineno name scope; do
     [ -z "$lineno" ] && continue
     # 見出し側と同じ正規化（"（"/"(" 以降を切り落とす）を引用名にも適用する。
     # 例: 「判断に迷ったら（執筆時の原則）」節 は見出し「## 判断に迷ったら（執筆時の原則）」
     # を指しており、プールには括弧を落としたコア名で入っている
     core="$(printf '%s' "$name" | sed -E 's/(（|\().*$//')"
-    if grep -qxF "$core" "$POOL"; then
-      result OK "$f:$lineno: 「$name」節に対応する見出し／強調ラベルが存在する"
+    if [ "$scope" = "DEFAULT" ]; then
+      pool_file="$POOL"
+      note=""
     else
-      result FAIL "$f:$lineno: 「$name」節に対応する見出し／強調ラベルが見つからない"
+      scoped_path="$(scope_path "$scope")"
+      pool_file="$WORK/pool_$scope.txt"
+      note="（${scoped_path:-指定先不明} 指定）"
+    fi
+    if grep -qxF "$core" "$pool_file"; then
+      result OK "$f:$lineno: 「$name」$note に対応する見出し／強調ラベルが存在する"
+    else
+      result FAIL "$f:$lineno: 「$name」$note に対応する見出し／強調ラベルが見つからない"
     fi
   done <<EOF
 $matches
@@ -409,19 +558,118 @@ EOF
   done
 fi
 
-# playbook / SKILL.md 中の "phase: `x`" 記法
+# playbook / SKILL.md 中の phase 言及。旧来の "phase: `x`" だけでなく、以下の
+# 代表的な記法もカバーする:
+#   STRONG（バッククォート語の位置が文脈上ほぼ確実に phase 値）:
+#     ・phase が `x`（`hearing` / `awaiting_approval` のような "/" 連鎖も含む）
+#     ・`phase` が `x`（`phase` 自体がバッククォート付きの場合も同様）
+#     ・phase を `x` に
+#     ・phase: `x` / phase： `x` / 次 phase: `x`
+#   WEAK（"のとき"・"フェーズ" は phase 以外の語にも多用されるため、正準集合に
+#   近い〔レーベンシュタイン距離2以下の〕未知語のときだけ WARN にする。無関係語
+#   まで拾って誤検知を出さないことを優先する）:
+#     ・`x` のとき
+#     ・`x` フェーズ
+# STRONG で見つかった位置は WEAK 側の重複検出から除外する（`phase が \`x\` のとき`
+# のように両方にマッチしうるため、二重報告を避ける）。
+# 検査していない記法: 「不具合報告は同項目のただし書きで `development`」のように
+# phase・が/を/のとき・フェーズのいずれとも直接結びつかない裸のバッククォート語は
+# 対象外にした（文脈が phase 値なのか他の識別子なのか機械的に確実な判定ができない
+# ため。誤検知を避けることを優先する）。
+cat > "$WORK/phase_scan.awk" <<'AWK_EOF'
+{
+  line = $0
+  delete seen
+  scan_chain(line, "(`phase`|phase)[ \t]*が[ \t]*(`[a-zA-Z_]+`[ \t]*/[ \t]*)*`[a-zA-Z_]+`", "STRONG")
+  scan_chain(line, "(`phase`|phase)[ \t]*を[ \t]*`[a-zA-Z_]+`[ \t]*に", "STRONG")
+  scan_chain(line, "(phase:|phase：)[ ]?`[a-zA-Z_]+`", "STRONG")
+  scan_chain(line, "`[a-zA-Z_]+`[ \t]*のとき", "WEAK")
+  scan_chain(line, "`[a-zA-Z_]+`[ \t]*フェーズ", "WEAK")
+}
+
+function scan_chain(line, re, cat,    rest, base, mstart, mlen, chunk, abs0) {
+  rest = line
+  base = 0
+  while (match(rest, re)) {
+    mstart = RSTART; mlen = RLENGTH
+    chunk = substr(rest, mstart, mlen)
+    abs0 = base + mstart - 1
+    extract_tokens(chunk, abs0, cat)
+    base = base + mstart + mlen - 1
+    rest = substr(rest, mstart + mlen)
+  }
+}
+
+function extract_tokens(chunk, baseabs, cat,    r, b, ms, ml, tok, abspos, key) {
+  r = chunk; b = 0
+  while (match(r, /`[a-zA-Z_]+`/)) {
+    ms = RSTART; ml = RLENGTH
+    tok = substr(r, ms + 1, ml - 2)
+    abspos = baseabs + b + ms - 1
+    key = abspos
+    # `phase` 自体（アンカーがバッククォート付きの場合の当のトークン）は
+    # phase の値ではないので対象外にする
+    if (tok != "phase" && !(key in seen)) {
+      print cat "\t" FNR "\t" tok
+      seen[key] = 1
+    }
+    b = b + ms + ml - 1
+    r = substr(r, ms + ml)
+  }
+}
+AWK_EOF
+
+cat > "$WORK/levenshtein.awk" <<'AWK_EOF'
+function lev(a, b,    la, lb, i, j, cost, ca, cb, d1, d2, d3, m,   prev, cur) {
+  la = length(a); lb = length(b)
+  for (j = 0; j <= lb; j++) prev[j] = j
+  for (i = 1; i <= la; i++) {
+    cur[0] = i
+    ca = substr(a, i, 1)
+    for (j = 1; j <= lb; j++) {
+      cb = substr(b, j, 1)
+      cost = (ca == cb) ? 0 : 1
+      d1 = prev[j] + 1
+      d2 = cur[j - 1] + 1
+      d3 = prev[j - 1] + cost
+      m = d1
+      if (d2 < m) m = d2
+      if (d3 < m) m = d3
+      cur[j] = m
+    }
+    for (j = 0; j <= lb; j++) prev[j] = cur[j]
+  }
+  return prev[lb]
+}
+BEGIN {
+  n = split(canon, arr, " ")
+  best = 999
+  for (i = 1; i <= n; i++) {
+    d = lev(tok, arr[i])
+    if (d < best) best = d
+  }
+  print best
+}
+AWK_EOF
+
+# WEAK 判定のあいまい度合いの閾値（正準集合とのレーベンシュタイン距離）
+PHASE_CLOSE_THRESHOLD=2
+
 for f in $TARGET_MD_FILES; do
-  matches="$(sgrep -noE '(phase: |phase： |phase )`[a-z_]+`' "$ROOT/$f")"
+  matches="$(awk -f "$WORK/phase_scan.awk" "$ROOT/$f" || true)"
   [ -z "$matches" ] && continue
-  while IFS= read -r line; do
-    [ -z "$line" ] && continue
-    lineno="${line%%:*}"
-    ref="${line#*:}"
-    val="$(printf '%s' "$ref" | sed -E 's/.*`([a-z_]+)`.*/\1/')"
+  while IFS="$(printf '\t')" read -r cat lineno val; do
+    [ -z "$cat" ] && continue
     if in_set "$val" "$canon"; then
       result OK "$f:$lineno: phase \`$val\` は正準 phase 集合に含まれる"
-    else
+    elif [ "$cat" = "STRONG" ]; then
       result FAIL "$f:$lineno: phase \`$val\` は SKILL.md Step 5 の phase 集合に無い未知の phase 名"
+    else
+      dist="$(awk -v tok="$val" -v canon="$canon" -f "$WORK/levenshtein.awk" </dev/null)"
+      if [ "$dist" -le "$PHASE_CLOSE_THRESHOLD" ]; then
+        result WARN "$f:$lineno: \`$val\` は phase 名に近いが正準集合に無い（文脈が曖昧なため WARN。typo の可能性を確認）"
+      fi
+      # 正準集合から離れた語は phase 文脈と断定できないため報告しない（誤検知回避）
     fi
   done <<EOF
 $matches
@@ -491,10 +739,25 @@ for f in $TARGET_MD_FILES; do
       case "$tok" in
         *.md|*.json|*.sh) continue ;;
       esac
-      if grep -qxF "$tok" "$DOTTED_PATHS_FILE"; then
+      # `state.phase` のような "state." 接頭辞は state.json 自体を指す変数名で
+      # あって state.json 内のキーではないため、照合前に剥がす
+      # （`state.approval.approved` → `approval.approved`）。
+      lookup_tok="$tok"
+      case "$lookup_tok" in
+        state.*) lookup_tok="${lookup_tok#state.}" ;;
+      esac
+      if grep -qxF "$lookup_tok" "$DOTTED_PATHS_FILE"; then
         result OK "$f:$lineno: state フィールド \`$tok\` は state.json に実在する"
       else
-        result FAIL "$f:$lineno: state フィールド \`$tok\` が templates/state.json に見つからない"
+        # 根のキーが state.json のトップレベルに無いドット付き識別子は、state の
+        # フィールド参照ではない可能性が高い（例: git config の `user.name`）。
+        # 根が実在する場合のみ「パスの誤り」と断定して FAIL、そうでなければ WARN。
+        root_tok="${lookup_tok%%.*}"
+        if grep -qxF "$root_tok" "$DOTTED_PATHS_FILE"; then
+          result FAIL "$f:$lineno: state フィールド \`$tok\` が templates/state.json に見つからない"
+        else
+          result WARN "$f:$lineno: \`$tok\` は state.json のキーではない（state 参照なら誤り、他の識別子なら無視してよい）"
+        fi
       fi
     done <<EOF
 $matches
