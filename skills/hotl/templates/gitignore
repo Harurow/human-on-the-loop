@@ -17,5 +17,8 @@ secrets.*
 # hotl-pm との受け渡し（一時ファイル）
 docs/inbox.md
 
+# 言語・ツールごとの生成物（技術選定後、開発の最初のタスクで実際に使うものを追記する）
+# 例: __pycache__/ *.pyc .venv/ / node_modules/ dist/ / target/ / .pytest_cache/ .mypy_cache/
+
 # OS / エディタ
 .DS_Store
