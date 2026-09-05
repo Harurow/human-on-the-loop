@@ -52,6 +52,8 @@
 - **`plans/regression-scenarios.md`**: 過去の CRITICAL/MAJOR を40シナリオに落としたもの。毎周のレビューで全件通してから新規探索する
 - **`plans/review-backlog.md`**: PASS 周の MINOR/NIT を積む場所（反映して再周する運用をやめた）
 - `scripts/check-consistency.sh` に ADR 索引の整合検査を追加（319 検査）
+- **`plans/findings-ledger.md`（指摘台帳）**: 1指摘1行で「適用した対応」と「その後（その対応が生んだ指摘）」を追跡。修正前に領域タグで引き、過去に欠陥を生んだ対応の繰り返しを禁止
+- **変更プロセスの有界化（ADR-011）**: 敵対的レビューは最大2周、合格条件は「回帰 NG ゼロ かつ CRITICAL ゼロ」。2周目の MAJOR は直さず次の変更の入力に。構造に触る変更は実地ドライラン必須
 
 ### 変更
 
