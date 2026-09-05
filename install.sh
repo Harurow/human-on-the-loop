@@ -37,6 +37,7 @@ fi
 TARGET="$(cd "$TARGET" && pwd)"
 
 INSTALLED=false
+SKIPPED=false
 
 install_skill() {
   local name="$1"
@@ -55,7 +56,7 @@ install_skill() {
       rm -rf "$dest"
     elif [[ -t 0 ]]; then
       read -r -p "既に存在します: $dest — 上書きしますか？ [y/N] " ans || ans=""
-      [[ "$ans" == "y" || "$ans" == "Y" ]] || { echo "スキップしました: $name"; return 0; }
+      [[ "$ans" == "y" || "$ans" == "Y" ]] || { echo "スキップしました: $name"; SKIPPED=true; return 0; }
       rm -rf "$dest"
     else
       echo "Error: 既に存在します: $dest — 非対話実行では --force を付けてください。" >&2
@@ -79,14 +80,16 @@ $PM && install_skill hotl-pm
 
 # 導入した版を記録する（不具合報告時に版を特定するため。--link でも実体を汚さない位置に置く）
 # 実際に配置した場合のみ書く — 上書きを拒否してスキップしたのに記録だけ新しくなると、
-# インストール実体と記録が食い違う。
+# インストール実体と記録が食い違う。スキップが混ざった場合はその旨も残す。
 if $INSTALLED; then
   commit="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
   mode=$($LINK && echo link || echo copy)
-  printf '%s (commit %s, %s, installed %s)\n' \
-    "$VERSION" "$commit" "$mode" "$(date +"%Y-%m-%dT%H:%M:%S%z")" \
+  note=""
+  $SKIPPED && note=" ※一部のスキルは旧版のままスキップされました"
+  printf '%s (commit %s, %s, installed %s)%s\n' \
+    "$VERSION" "$commit" "$mode" "$(date +"%Y-%m-%dT%H:%M:%S%z")" "$note" \
     > "$TARGET/.claude/skills/.hotl-version"
-  echo "Version: $VERSION (commit $commit)"
+  echo "Version: $VERSION (commit $commit)$note"
 else
   echo "配置したスキルはありません（版の記録も更新していません）"
 fi

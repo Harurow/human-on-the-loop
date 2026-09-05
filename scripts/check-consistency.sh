@@ -362,6 +362,17 @@ BEGIN {
   suf[nsuf++] = "」の手順"
   suf[nsuf++] = "」に従う"
   suf[nsuf++] = "」の書式"
+  # 実在の参照で使われている終端語（改名時に見逃しが出ていたもの）
+  suf[nsuf++] = "」項目"
+  suf[nsuf++] = "」参照"
+  suf[nsuf++] = "」を出す"
+  suf[nsuf++] = "」に従い"
+  suf[nsuf++] = "」の ⚠️"
+  suf[nsuf++] = "」の ⏸"
+  suf[nsuf++] = "」で報告"
+  suf[nsuf++] = "」の未実施手順"
+  suf[nsuf++] = "」が定める"
+  suf[nsuf++] = "」の最終報告"
 }
 {
   line = $0
@@ -391,6 +402,12 @@ BEGIN {
           name = substr(line, namestart, namelen)
           pre = substr(line, 1, last_open - 1)
           scope = detect_scope(pre)
+          # 節見出しではなく「文面の例」を引用したもの（例: 「前回どこまで／今から何を」）
+          # を除外する。節名に全角スラッシュ・句点・「例:」は現れない。
+          if (index(name, "／") > 0 || index(name, "。") > 0 || index(name, "例:") > 0) {
+            pos = abs_end + mlen_b
+            continue
+          }
           print FNR "\t" name "\t" scope
         }
       }
@@ -725,6 +742,10 @@ printf '%s\n' "$dotted_paths" > "$DOTTED_PATHS_FILE"
 # `phase` `repo` `project` `approval` `artifacts` 等の一般的な単語は、フィールド名以外の
 # 意味でも頻出するため、裸のバックティック単体では判定しない（誤検知回避を優先）。
 # ドット記法（例: `approval.approved`）で明示された場合のみそれらも検査する。
+# 注: 裸のフィールド名は「この名前が出てきたら state.json に在るはず」を確かめるだけで、
+#     `approved_byx` のような typo は列に無いので 0 件マッチとなり素通りする（検査数が
+#     1 減るだけ）。バッククォート付きのドット記法（検査4 の本体）と違い、裸の語を網羅的に
+#     疑うと誤検知が増えるための設計上の限界。
 BARE_CURATED="approved_by approved_at document_sha256 phase_history created_at updated_at hearing_notes"
 
 for f in $TARGET_MD_FILES; do
