@@ -44,18 +44,15 @@ for arg in "$@"; do
   esac
 done
 
-# 多バイト文字（日本語の「（」「：」等）をブラケット式 [...] の中に直接書くと、
-# ロケールが C（非 UTF-8）の環境では 1 バイトずつバラして解釈され、文字列を
-# 破壊することがある（例: s/[（(].*$// が「テスト可能性」を「テス�」に壊す）。
-# 対策として、本スクリプトでは多バイト文字を含む文字クラス [...] を一切使わず、
-# 必ず代替 (a|b) で書く（これはロケールに依存せず正しく動く）。
-#
-# 意図的に LC_ALL を UTF-8 ロケールへ変更しない: macOS 標準の /bin/bash は
-# 3.2（GPLv3 回避のため凍結）であり、UTF-8 ロケール下でこのスクリプトのように
-# 変数展開の直後に多バイト文字（「」等）が続くコードを実行すると、bash 自身の
-# パーサが変数名の終端を誤検出し「name�: unbound variable」のように壊れる
-# 既知の不具合がある。ブラケット式を避ける対策だけで C ロケールのままでも
-# 文字列破壊は起きないため、LC_ALL は変更しない方が安全。
+# 文字列処理を安定させるため、**ロケールを C に固定する**。
+# 理由: (1) 多バイト文字（「（」「：」等）をブラケット式 [...] に直接書くと非 UTF-8
+# ロケールで1バイトずつ解釈され文字列が壊れる（本スクリプトはブラケット式を使わず
+# 代替 (a|b) で書くことで回避している）。(2) 逆に UTF-8 ロケールでは macOS 標準の
+# bash 3.2 のパーサが `$var` の直後に多バイト文字が続くコードを誤解析し
+# 「name<ゴミ>: unbound variable」で異常終了する。呼び出し側の LANG に依存して
+# 落ちたり落ちなかったりするのを避けるため、ここで明示的に C へ固定する。
+export LC_ALL=C
+export LANG=C
 
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/hotl-consistency.XXXXXX")"
 trap 'rm -rf "$WORK"' EXIT
@@ -771,6 +768,54 @@ else
     else
       result FAIL "reporting.md:$label_lineno: phase \`$ph\` の人間向けラベルが表に無い（人間向け文面に内部用語が漏れる）"
     fi
+  done
+fi
+
+echo "==== 3c. 対応記録の語彙（reporting.md の列挙が正） ===="
+
+# playbook 側で使う 対応記録「X」 の X が reporting.md「対応の記録」の列挙にあるか。
+# 監査の未処理判定は語の一致で行われるため、語彙のドリフトは実害になる。
+# ブラケット式 [^」] は C ロケールで壊れるので awk の index/substr で切り出す。
+cat > "$WORK/vocab_extract.awk" <<'AWK_EOF'
+{
+  line = $0
+  while (1) {
+    p = index(line, "対応記録「")
+    if (p == 0) break
+    rest = substr(line, p + length("対応記録「"))
+    q = index(rest, "」")
+    if (q == 0) break
+    print substr(rest, 1, q - 1)
+    line = substr(rest, q + 1)
+  }
+}
+AWK_EOF
+
+vocab_line="$(sgrep -n '対応の記録' "$ROOT/skills/hotl/playbooks/reporting.md" | head -1)"
+if [ -z "$vocab_line" ]; then
+  result FAIL "skills/hotl/playbooks/reporting.md: 「対応の記録」の語彙定義が見つからない"
+else
+  vocab_no="${vocab_line%%:*}"
+  sed -n "${vocab_no}p" "$ROOT/skills/hotl/playbooks/reporting.md" \
+    | sed -E 's/^.*結果（//' \
+    | tr '/' '\n' \
+    | sed -E 's/〔.*$//; s/）.*$//; s/\*\*//g; s/^[ \t]+//; s/[ \t]+$//' \
+    | grep -v '^$' > "$WORK/vocab.txt"
+  for f in $SKILLS_NON_TEMPLATE_MD; do
+    uses="$(awk -f "$WORK/vocab_extract.awk" "$ROOT/$f" | sort -u)"
+    [ -z "$uses" ] && continue
+    while IFS= read -r u; do
+      [ -z "$u" ] && continue
+      # trail の行は「対応: <語>」の形なので、接頭辞が付いた書き方も同じ語として扱う
+      ubare="${u#対応: }"
+      if grep -qxF "$ubare" "$WORK/vocab.txt"; then
+        result OK "$f: 対応記録「$u」は reporting.md の語彙にある"
+      else
+        result WARN "$f: 対応記録「$u」が reporting.md の語彙一覧に無い（語彙のドリフト）"
+      fi
+    done <<EOF2
+$uses
+EOF2
   done
 fi
 

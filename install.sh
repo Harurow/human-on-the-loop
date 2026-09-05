@@ -28,7 +28,9 @@ PM=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --target) TARGET="${2:-}"; [[ -n "$TARGET" && "$TARGET" != --* ]] || { echo "Error: --target にはパスが必要です" >&2; exit 1; }; shift 2 ;;
+    --target)
+      [[ -z "$TARGET" ]] || { echo "Error: --target は1回だけ指定してください" >&2; exit 1; }
+      TARGET="${2:-}"; [[ -n "$TARGET" && "$TARGET" != --* ]] || { echo "Error: --target にはパスが必要です" >&2; exit 1; }; shift 2 ;;
     --pm)     PM=true; shift ;;
     --link)   LINK=true; shift ;;
     --force)  FORCE=true; shift ;;
@@ -94,7 +96,9 @@ $PM && install_skill hotl-pm
 if $INSTALLED; then
   commit="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo "unknown")"
   mode=$($LINK && echo link || echo copy)
-  $SKIPPED && mode="$mode（一部は前回のまま）"
+  # ${mode} と波括弧で囲む: bash 3.2 は UTF-8 ロケールで `$mode（` を変数名として
+  # 誤解析し、set -u と組み合わさると異常終了する
+  $SKIPPED && mode="${mode}（一部は前回のまま）"
   note=""
   $SKIPPED && note=" ※一部のスキルは旧版のままスキップされました"
   # --link は実体がフレームワークのリポジトリに追従するため、commit を固定値として
