@@ -48,11 +48,83 @@ ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT"
 
 VERBOSE=false
+TIER_MODE=false
+TIER_BASE=""
+TIER_TARGET=""
+prev=""
 for arg in "$@"; do
   case "$arg" in
     --verbose) VERBOSE=true ;;
+    --tier) TIER_MODE=true ;;
+    *) if [ "$prev" = "--tier" ]; then TIER_BASE="$arg"; elif $TIER_MODE && [ -n "$TIER_BASE" ] && [ -z "$TIER_TARGET" ]; then TIER_TARGET="$arg"; fi ;;
   esac
+  prev="$arg"
 done
+
+# ---------------------------------------------------------------------------
+# --tier [BASE [TARGET]]: 変更の段階（A 軽微 / B 局所 / C 構造）を git diff から判定する
+#   PRINCIPLES「フレームワーク自体の変更プロセス」の表が正。ここは機械判定のみ。
+#   BASE 省略時は、作業ツリーに差分があれば HEAD、無ければ HEAD~1。TARGET 省略時は作業ツリー。
+#   判定: skills/・install.sh に触れなければ A。触れていれば B。
+#         さらに変更行が下の「C の節」に入っていれば C（state.json は常に C）。
+# ---------------------------------------------------------------------------
+if $TIER_MODE; then
+  export LC_ALL=C; export LANG=C
+  cd "$(dirname "$0")/.." || exit 2
+  if [ -z "$TIER_BASE" ]; then
+    if [ -n "$(git status --porcelain -- skills install.sh 2>/dev/null)" ]; then TIER_BASE="HEAD"; else TIER_BASE="HEAD~1"; fi
+  fi
+  dargs="$TIER_BASE"; [ -n "$TIER_TARGET" ] && dargs="$TIER_BASE $TIER_TARGET"
+  files="$(git diff --name-only $dargs -- . 2>/dev/null)"
+  if [ -z "$files" ]; then echo "tier: A（差分なし。基準: $dargs）"; exit 0; fi
+  tier="A"; reasons=""
+  c_markers_for() {
+    case "$1" in
+      skills/hotl/SKILL.md) printf '%s\n' "共通手順" "Step 6" ;;
+      skills/hotl/playbooks/05-development.md) printf '%s\n' "最終受け入れ検証" ;;
+      skills/hotl/playbooks/reporting.md) printf '%s\n' "書式" "共通規則" "割り込みへの対応" "承認ゲート" ;;
+      skills/hotl-pm/SKILL.md) printf '%s\n' "Step 4" ;;
+      *) : ;;
+    esac
+  }
+  tmp="${TMPDIR:-/tmp}/hotl-tier.$$"
+  for f in $files; do
+    case "$f" in
+      skills/hotl/templates/state.json) tier="C"; reasons="$reasons
+  C: $f（state のスキーマ）"; continue ;;
+      skills/*|install.sh) ;;
+      *) continue ;;
+    esac
+    [ "$tier" = "A" ] && tier="B"
+    markers="$(c_markers_for "$f")"
+    [ -z "$markers" ] && continue
+    # 変更行の番号（TARGET 側）から、その行を含む ## 見出しを求める
+    if [ -n "$TIER_TARGET" ]; then content="$(git show "$TIER_TARGET:$f" 2>/dev/null)"; else content="$(cat "$f")"; fi
+    hunks="$(git diff -U0 $dargs -- "$f" | grep -E '^@@' | sed -E 's/^@@ -[0-9]+(,[0-9]+)? \+([0-9]+)(,([0-9]+))? @@.*/\2 \4/')"
+    [ -z "$hunks" ] && continue
+    heads="$(printf '%s\n' "$hunks" | while read -r start len; do
+      [ -z "$len" ] && len=1; [ "$len" = "0" ] && len=1
+      end=$((start + len - 1))
+      printf '%s\n' "$content" | awk -v s="$start" -v e="$end" 'BEGIN{h=""} /^## /{h=$0} NR>=s && NR<=e {print h}'
+    done | sort -u)"
+    : > "$tmp"
+    printf '%s\n' "$markers" | while read -r m; do
+      [ -z "$m" ] && continue
+      if printf '%s\n' "$heads" | grep -qF -- "$m"; then printf '  C: %s（節「%s」）\n' "$f" "$m"; fi
+    done >> "$tmp"
+    if [ -s "$tmp" ]; then tier="C"; reasons="$reasons
+$(cat "$tmp")"; fi
+  done
+  rm -f "$tmp"
+  echo "tier: $tier（基準: $dargs）"
+  [ -n "$reasons" ] && printf '%s\n' "$reasons"
+  case "$tier" in
+    A) echo "手順: check-consistency.sh で FAIL ゼロのみ" ;;
+    B) echo "手順: 敵対的レビュー1周（回帰は変更した領域タグ＋GATE/RESUME のみ・新規探索なし）。文面だけの変更なら理由を review-log に書いて A に下げてよい" ;;
+    C) echo "手順: フル（最大2周＋文面変更時の使う側＋ドライランは次の C とまとめて1回）" ;;
+  esac
+  exit 0
+fi
 
 # 文字列処理を安定させるため、**ロケールを C に固定する**。
 # 理由: (1) 多バイト文字（「（」「：」等）をブラケット式 [...] に直接書くと非 UTF-8

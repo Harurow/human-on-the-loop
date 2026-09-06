@@ -29,6 +29,7 @@
 | [008](008-ledger-commit-discipline.md) | 台帳（docs/）は更新のたび commit し、WIP の破棄は実装ファイルに限る | Accepted |
 | [009](009-review-loop-protocol.md) | レビューは回帰集を通してから新規探索。PASS 周の MINOR は反映しない | 一部 Superseded by 011 |
 | [010](010-c-locale-for-scripts.md) | シェルスクリプトはロケールを C に固定する | Accepted |
-| [011](011-bounded-review-rounds.md) | レビューは最大2周。合格条件は「回帰 NG ゼロ かつ CRITICAL ゼロ」 | Accepted |
+| [011](011-bounded-review-rounds.md) | レビューは最大2周。合格条件は「回帰 NG ゼロ かつ CRITICAL ゼロ」 | 一部 Superseded by 014 |
 | [012](012-transactional-state-update.md) | 複数ファイルの状態更新は「更新開始/更新完了」で囲み、再開時は冪等にやり直す | Accepted |
-| [013](013-diff-update-review-scope.md) | 差分更新時の要件レビューは変更部分に限定する | Accepted |
+| [013](013-diff-update-review-scope.md) | 差分更新時の要件レビューは「変更部分に起因する指摘」に限定する（入力は全文） | Accepted（58周で決定の形を修正） |
+| [014](014-tiered-review.md) | レビューは変更の段階（A 軽微 / B 局所 / C 構造）で手順を変える | Accepted |
