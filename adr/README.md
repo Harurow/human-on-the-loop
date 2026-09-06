@@ -33,3 +33,4 @@
 | [012](012-transactional-state-update.md) | 複数ファイルの状態更新は「更新開始/更新完了」で囲み、再開時は冪等にやり直す | Accepted |
 | [013](013-diff-update-review-scope.md) | 差分更新時の要件レビューは「変更部分に起因する指摘」に限定する（入力は全文） | Accepted（58周で決定の形を修正） |
 | [014](014-tiered-review.md) | レビューは変更の段階（A 軽微 / B 局所 / C 構造）で手順を変える | Accepted |
+| [015](015-priority-driven-order.md) | 優先度 must / should / could をタスク順の唯一の根拠にし、自律判断は次の報告で開示する | Accepted |

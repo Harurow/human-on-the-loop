@@ -84,3 +84,8 @@
 
 - **H-1 `scripts/check-consistency.sh`**: `LANG=ja_JP.UTF-8` × `/bin/bash` 3.2 で完走する（48周。C ロケールでしか動かない状態だった）
 - **H-2 `install.sh`**: 同条件・pty 対話（y / N / Ctrl-D）・symlink 経由起動・`--link` の冪等・日本語と空白を含むパス（48・49・50周）
+
+## I. 優先度と MVP（P9）
+
+- **I-1 must を先に並べる**: R-1(must)・R-2(could)・R-3(must) で S-3 が S-2 に依存 → **期待**: tasks.md は雛形タスクの次に must 群（S-1・S-3 と、依存先の S-2）、その後に残りの should / could、末尾に検証タスク。依存先を must 群に含めた理由が `decision` にあり、requirements.md は書き換えられていない（ADR-015）
+- **I-2 判断の開示**: 開発中に `decision` を記録 → 次の中間報告 → **期待**: 「判断した点」に要旨が最大3件載る。must 群の最後のタスク完了時にも中間報告が出て「MVP 分は完了」が添えられる（ADR-015）
