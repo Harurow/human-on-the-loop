@@ -9,4 +9,5 @@
 - **修正の前に `plans/findings-ledger.md`（同じ領域の過去の対応とその後）と `adr/` に照合する**。過去に欠陥を生んだ対応の繰り返しは禁止。レビュアーの修正案はそのまま採用しない
 - レビュアーには `plans/regression-scenarios.md` を渡し、**ADR・レビュー履歴・変更の経緯は渡さない**（敵対性が落ちる）
 - 各周は `plans/review-log.md` に1行追記する
+- **git 管理下なので commit までがタスク。origin があるので push までがタスク**（push を候補や確認事項にしない）
 - ランタイムは Claude Code のみ（nanoclaw 対応は 2026-08 に撤去済み。再導入しない）
