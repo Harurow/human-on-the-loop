@@ -10,4 +10,5 @@
 - レビュアーには `plans/regression-scenarios.md` を渡し、**ADR・レビュー履歴・変更の経緯は渡さない**（敵対性が落ちる）
 - 各周は `plans/review-log.md` に1行追記する
 - **git 管理下なので commit までがタスク。origin があるので push までがタスク**（push を候補や確認事項にしない）
+- **`~/code/hotl-projects` は `--link`（symlink）運用**。このリポジトリを編集する前に、走行中のセッション・チャンクが区切りで戻っていることを確認する（編集途中の版がリアルタイムで読まれる）
 - ランタイムは Claude Code のみ（nanoclaw 対応は 2026-08 に撤去済み。再導入しない）
